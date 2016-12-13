@@ -67,16 +67,6 @@ void* im_main(void *arg)
 	pthread_exit(NULL);
 }
 
-void im_create_protocol(char *buf, Msg *msg)
-{
-	
-}
-
-void im_parse_protocol(char *buf, Msg *msg)
-{
-
-}
-
 void im_close(int cfd)
 {
 	close(cfd);

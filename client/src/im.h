@@ -1,5 +1,12 @@
-#ifndef __UI_H__
-#define __UI_H__
+#ifndef __IM_H__
+#define __IM_H__
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#define IM_API extern
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +26,19 @@
 #define NAME_MAX 80
 #define TITLE "iChat 1.0"
 
-/* session */
+/* session*/
+
+/*
+ *
+ * The object will be transform to json string
+ * eg: {
+ * 	    'type': 'console', // console, web, app
+ * 	    'chat': 'u',       // u, a
+ *      'to': 'andy',
+ *      'from' : 'mary',
+ *      'data' : 'hello world!'
+ *     }
+ */
 struct Msg {
 	int type;
 	long int chat;
@@ -34,7 +53,7 @@ struct User {
 	char name[NAME_MAX];
 	int port;
 	char ip[256];
-}
+};
 
 typedef struct User User;
 
@@ -51,21 +70,30 @@ struct sa {
 
 typedef struct sa sa;
 
-void im_login(User *usr);
-int im_connect(char *ip, int port);
-void* im_main(void *arg);
-void im_close(int cfd);
+IM_API void im_login(User *usr);
+IM_API int im_connect(char *ip, int port);
+IM_API void* im_main(void *arg);
+IM_API void im_close(int cfd);
+
+/* protocol */
+IM_API void file_get_contents(char *url, char *content);
+IM_API void im_create_protocol(char *buf, Msg *msg);
+IM_API void im_parse_protocol(Msg *msg, char *buf);
 
 /* UI interface */
-WINDOW *wins[3];
-PANEL *panels[3];
+IM_API WINDOW *wins[3];
+IM_API PANEL *panels[3];
 
-void ui_init();
-void ui_end();
-void ui_main();
-void ui_update();
-void ui_gets(char *buf);
-void ui_puts(char *buf);
-void ui_promote(char *buf);
+IM_API void ui_init();
+IM_API void ui_end();
+IM_API void ui_main();
+IM_API void ui_update();
+IM_API void ui_gets(char *buf);
+IM_API void ui_puts(char *buf);
+IM_API void ui_promote(char *buf);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
