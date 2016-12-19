@@ -2,7 +2,7 @@
 error_reporting(1);
 
 $table = new Swoole\Table(1024);
-$serv  = new Swoole\Server("127.0.0.1", 8080);
+$serv  = new Swoole\Server("192.168.66.10", 8080);
 
 $table->column('fd', Swoole\Table::TYPE_INT);
 $table->column('login_time', Swoole\Table::TYPE_STRING, 24);
@@ -30,6 +30,7 @@ $serv->on('connect', function ($serv, $fd) use ($conns)
 			$serv->send($cfd, $usr['name'] . '加入了房间!'. '<'. $usr['login_time'] .'>');
 		}
 	}
+	echo "client $fd connected.\n";
 
 });
 
@@ -40,7 +41,7 @@ $serv->on('receive', function ($serv, $fd, $fromId, $data)
 
 $serv->on('close', function ($serv, $fd)
 {
-	echo "client $fd close", "\n";
+	echo "client $fd close.", "\n";
 });
 
 $serv->start();

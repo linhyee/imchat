@@ -60,6 +60,8 @@ void ui_init()
 {
 	initscr();
 	cbreak();
+	nonl();
+	intrflush(stdscr,FALSE);
 	refresh();
 }
 
@@ -95,10 +97,18 @@ void ui_update()
 	doupdate();
 }
 
-void ui_gets(char *buf)
+int ui_gets(char *buf)
 {
+	int n = 0;
 	ui_active_promote();
+
 	wgetnstr(wins[2], buf, BUFFER_SIZE);
+
+	while ( (n = strlen(buf)) <= 0) {
+		wgetnstr(wins[2], buf, BUFFER_SIZE);
+	}
+
+	return n;
 }
 
 void ui_promote(char *buf)

@@ -4,20 +4,22 @@ typedef struct
 {
 	long int type;
 	char data[BUFFER_SIZE];
-} Msg;
+} Msg_st;
 
 int main(void)
 {
 	ui_init();
 	ui_main();
 
-	Msg msg;
+	Msg_st msg;
 
 	while (1) {
 		ui_promote(">>");
+
 		memset((void*) &msg, 0, sizeof(Msg));
-		ui_gets(msg.data);
-		ui_puts(msg.data);
+
+		if (ui_gets(msg.data) > 0)
+			ui_puts(msg.data);
 
 		ui_update();
 	}

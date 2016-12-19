@@ -6,12 +6,14 @@ extern "C"
 {
 #endif
 
-#define IM_API extern
+#define IMAPI extern
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <errno.h>
+#include <time.h>
 #include <unistd.h>
 #include <curses.h>
 #include <panel.h>
@@ -32,65 +34,65 @@ extern "C"
  *
  * The object will be transform to json string
  * eg: {
- * 	    'type': 'console', // console, web, app
- * 	    'chat': 'u',       // u, a
+ *      'type': 'console', // 1 => console, 2 => web, 3 => app
+ *      'chat': 'u',       // u => send to user, a => send all
  *      'to': 'andy',
  *      'from' : 'mary',
  *      'data' : 'hello world!'
  *     }
  */
 struct Msg {
-	int type;
-	long int chat;
-	char to[NAME_MAX];
-	char from[NAME_MAX];
-	char data[BUFFER_SIZE];
+    int type;
+    long int chat;
+    char to[NAME_MAX];
+    char from[NAME_MAX];
+    char data[BUFFER_SIZE];
 };
 
 typedef struct Msg Msg;
 
 struct User {
-	char name[NAME_MAX];
-	int port;
-	char ip[256];
+    char name[NAME_MAX];
+    int port;
+    char ip[256];
 };
 
 typedef struct User User;
 
 struct sa {
-	socklen_t len;
-	union {
-		struct sockaddr sa;
-		struct sockaddr_in sin;
-	} u;
+    socklen_t len;
+    union {
+        struct sockaddr sa;
+        struct sockaddr_in sin;
+    } u;
 #ifdef WITH_IPV6
-	struct sockaddr_in6 sin6;
+    struct sockaddr_in6 sin6;
 #endif
 };
 
 typedef struct sa sa;
 
-IM_API void im_login(User *usr);
-IM_API int im_connect(char *ip, int port);
-IM_API void* im_main(void *arg);
-IM_API void im_close(int cfd);
+IMAPI void im_login(User *usr);
+IMAPI int im_connect(char *ip, int port);
+IMAPI void* im_main(void *arg);
+IMAPI void im_close(int cfd);
 
 /* protocol */
-IM_API void file_get_contents(char *url, char *content);
-IM_API void im_create_protocol(char *buf, Msg *msg);
-IM_API void im_parse_protocol(Msg *msg, char *buf);
+IMAPI void file_get_contents(char *url, char *content);
+IMAPI void im_create_protocol(Msg *msg, char *buf, int len);
+IMAPI void im_parse_protocol(Msg *msg, char *buf);
 
 /* UI interface */
-IM_API WINDOW *wins[3];
-IM_API PANEL *panels[3];
+WINDOW *wins[3];
+PANEL *panels[3];
 
-IM_API void ui_init();
-IM_API void ui_end();
-IM_API void ui_main();
-IM_API void ui_update();
-IM_API void ui_gets(char *buf);
-IM_API void ui_puts(char *buf);
-IM_API void ui_promote(char *buf);
+IMAPI void ui_init();
+IMAPI void ui_end();
+IMAPI void ui_main();
+IMAPI void ui_update();
+IMAPI int ui_gets(char *buf);
+IMAPI void ui_puts(char *buf);
+IMAPI void ui_promote(char *buf);
 
 #ifdef __cplusplus
 }

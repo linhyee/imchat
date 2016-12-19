@@ -45,7 +45,7 @@ class User
 	}
 }
 
-$name = isset($_GET['u']) && $_GET['u'] ? $_GET['u'] : false;
+$name = filter_input(INPUT_GET, 'u');
 
 if ($name) {
 	echo User::checkUser($name) == false ? '0' : '1';
