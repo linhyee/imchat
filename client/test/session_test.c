@@ -8,7 +8,7 @@ int main(void)
 
 	write(cfd, "hello, mmm", 20);
 	
-	im_main((int *) cfd);
+	im_main((void *) (unsigned long)cfd);
 
 	im_close(cfd);
 

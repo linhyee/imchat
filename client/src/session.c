@@ -65,7 +65,7 @@ void* im_main(void *arg)
 {
 	Msg msg;
 	char buf[8029]; // the max tcp package length
-	int nread, sock = (int) arg;
+	int nread, sock = (unsigned long) arg;
 
 	while (1) {
 		nread = read(sock, buf, sizeof(buf));
