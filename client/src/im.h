@@ -51,10 +51,13 @@ struct Msg {
 
 typedef struct Msg Msg;
 
+/**
+ *  mary@192.168.66.10:8049
+ */
 struct User {
     char name[NAME_MAX];
-    int port;
     char ip[256];
+    int port;
 };
 
 typedef struct User User;
@@ -76,6 +79,7 @@ IMAPI void im_login(User *usr);
 IMAPI int im_connect(char *ip, int port);
 IMAPI void* im_main(void *arg);
 IMAPI void im_close(int cfd);
+IMAPI int get_url(char *url, void *buf);
 
 /* protocol */
 IMAPI void file_get_contents(char *url, char *content);
@@ -93,6 +97,9 @@ IMAPI void ui_update();
 IMAPI int ui_gets(char *buf);
 IMAPI void ui_puts(char *buf);
 IMAPI void ui_promote(char *buf);
+
+/* utils*/
+void elog(int fatal, const char *fmt, ...);
 
 #ifdef __cplusplus
 }

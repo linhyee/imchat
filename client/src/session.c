@@ -1,9 +1,10 @@
 #include "im.h"
+#include <curl/curl.h>
 
 /**
  *  Log function
  */
-static void elog(int fatal, const char *fmt, ...)
+void elog(int fatal, const char *fmt, ...)
 {
 	va_list ap;
 	static time_t now;
@@ -94,4 +95,34 @@ void* im_main(void *arg)
 void im_close(int cfd)
 {
 	close(cfd);
+}
+
+static size_t wcb(void *ptr, size_t size, size_t nmemb, void *data)
+{
+	size_t realsize = size * nmemb;
+	memcpy(data, ptr, size * nmemb);
+
+	return realsize;
+}
+
+int get_url(char *url, void *buf)
+{
+	int ret = -1;
+	CURL *curl;
+	CURLcode res;
+
+	curl = curl_easy_init();
+
+	if (curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, wcb);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)buf);
+
+		res = curl_easy_perform(curl);
+
+		curl_easy_cleanup(curl);
+		ret = 0;
+	}
+
+	return ret;	
 }

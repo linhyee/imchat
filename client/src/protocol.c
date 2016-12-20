@@ -33,24 +33,23 @@ void im_parse_protocol(Msg *msg, char *buf)
 	
 	json = cJSON_Parse(buf);
 
-	if (!json) {
-		printf("Error before: [%s]\n", cJSON_GetErrorPtr());
-	} else {
-		item = cJSON_GetObjectItem(json, "type");
-		msg->type = item->valueint;
+	if (!json)
+		elog("Error before: [%s]\n", cJSON_GetErrorPtr());
 
-		item = cJSON_GetObjectItem(json, "chat");
-		msg->chat = item->valueint;
+	item = cJSON_GetObjectItem(json, "type");
+	msg->type = item->valueint;
 
-		item = cJSON_GetObjectItem(json, "to");
-		memcpy(msg->to, item->valuestring, NAME_MAX);
+	item = cJSON_GetObjectItem(json, "chat");
+	msg->chat = item->valueint;
 
-		item = cJSON_GetObjectItem(json, "from");
-		memcpy(msg->from, item->valuestring, NAME_MAX);
+	item = cJSON_GetObjectItem(json, "to");
+	memcpy(msg->to, item->valuestring, NAME_MAX);
 
-		item = cJSON_GetObjectItem(json, "data");
-		memcpy(msg->data, item->valuestring, BUFFER_SIZE);
-	}
+	item = cJSON_GetObjectItem(json, "from");
+	memcpy(msg->from, item->valuestring, NAME_MAX);
+
+	item = cJSON_GetObjectItem(json, "data");
+	memcpy(msg->data, item->valuestring, BUFFER_SIZE);
 
 	cJSON_Delete(json);
 }

@@ -8,6 +8,8 @@ namespace webservices;
  */
 class User
 {
+
+// ------------------------------------------------------------------------
 	/**
 	 * __construct 
 	 */
@@ -16,6 +18,7 @@ class User
 
 	}
 
+// ------------------------------------------------------------------------
 	/**
 	 * find user
 	 * 
@@ -27,6 +30,8 @@ class User
 		return "usr1";	
 	}
 
+// ------------------------------------------------------------------------
+
 	/**
 	 * check user exists
 	 * 	
@@ -35,7 +40,11 @@ class User
 	 */
 	public static function checkUser($name)
 	{
-		$usr  = new self();
+		static $usr = null;
+
+		if (! $usr instanceof User) {
+			$usr  = new self();
+		}
 
 		if ($usr->getUser($name) == '') {
 			return false;
@@ -43,12 +52,4 @@ class User
 
 		return true;
 	}
-}
-
-$name = filter_input(INPUT_GET, 'u');
-
-if ($name) {
-	echo User::checkUser($name) == false ? '0' : '1';
-} else {
-	echo "-1";
 }
