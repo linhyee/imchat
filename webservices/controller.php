@@ -10,7 +10,9 @@ class Controller
 {
 	public function actionUser($name)
 	{
-		echo $name;
+		// var_dump($_REQUEST);
+		// echo $name;
+		echo 'what! 你个老伙计~';
 	}
 
 	public function action404()

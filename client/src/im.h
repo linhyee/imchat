@@ -99,6 +99,27 @@ IMAPI void ui_puts(char *buf);
 IMAPI void ui_promote(char *buf);
 
 /* utils*/
+#define BUFSIZE 0xf000
+#define HTTP_POST "POST /%s HTTP/1.1\r\nHOST: %s:%d\r\nAccept: */*\r\n"\
+    "Content-Type:application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s"
+#define HTTP_GET "GET /%s HTTP/1.1\r\nHOST: %s:%d\r\nAccept: */*\r\n\r\n"
+
+struct vec {
+    int len;
+    const void *ptr;
+};
+
+struct url {
+    struct vec  proto;
+    struct vec  user;
+    struct vec  pass;
+    struct vec  host;
+    struct vec  port;
+    struct vec  uri;
+};
+
+void http_post(const char *url, const char *post);
+void http_get(const char *url, char *buf);
 void elog(int fatal, const char *fmt, ...);
 
 #ifdef __cplusplus
