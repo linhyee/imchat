@@ -18,11 +18,76 @@ class Db
 
 	/**
 	 * 
+	 * table
+	 * 
+	 * @var string
+	 */
+	protected $table = '';
+
+	/**
+	 * 
+	 * table fields
+	 * 
+	 * @var string
+	 */
+	protected $fields = '*';
+
+	/**
+	 * 
+	 * where condition
+	 * 
+	 * @var string
+	 */
+	protected $where = '';
+
+	/**
+	 * 
+	 * joins statement
+	 * 
+	 * @var string
+	 */
+	protected $joins = '';
+
+	/**
+	 * 
+	 * order statement
+	 * 
+	 * @var string
+	 */
+	protected $order = '';
+
+	/**
+	 * 
+	 * group by
+	 * 
+	 * @var string
+	 */
+	protected $groups = '';
+
+	/**
+	 * 
+	 * having statement
+	 * 
+	 * @var string
+	 */
+	protected $having = '';
+
+	/**
+	 * 
+	 * limit
+	 * 
+	 * @var string
+	 */
+	protected $limit = '';
+
+
+	/**
+	 * 
 	 * sql statement
 	 * 
 	 * @var string
 	 */
-	private  $sql = "";
+	protected $sql = "";
 
 	/**
 	 * 
@@ -30,7 +95,7 @@ class Db
 	 * 
 	 * @var array
 	 */
-	private $values = array();
+	protected $values = array();
 
 	/**
 	 * 
@@ -38,7 +103,15 @@ class Db
 	 * 
 	 * @var null
 	 */
-	private $db = null;
+	protected $db = null;
+
+	/**
+	 * 
+	 * database type mysql ? pgsql ? mmsql ?
+	 * 
+	 * @var string
+	 */
+	protected $dbtype = '';
 
 // ------------------------------------------------------------------------
 	/**
@@ -63,7 +136,7 @@ class Db
 	 */
 	public function setDb(array $dsn = array())
 	{
-		$db_type = @strtolower($dsn['db_type']);
+		$this->dbtype = $db_type = @strtolower($dsn['db_type']);
 
 		switch($db_type)
 		{
@@ -119,17 +192,436 @@ class Db
 
 		if (!$instance instanceof Db)
 		{
-			$instance = new self(array(
-				'db_type'  => 'mysql',
-				'hostname' => 'localhost',
-				'database' => 'test',
-				'username' => 'root',
-				'password' => 'root',
-				'db_port'  => '3306',
-				'charset'  => 'utf8',
-			));
-
+			$instance = new self(Config::getConfig());
 		}
+
 		return $instance;
 	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @add a value to the values array
+	 *
+	 * @access public
+	 *
+	 * @param string $key the array key
+	 *
+	 * @param string $value The value
+	 *
+	 */
+	public function addValue($key, $value)
+	{
+		$this->values[$key] = $value;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @set the values
+	 *
+	 * @access public
+	 *
+	 * @param array
+	 *
+	 */
+	public function setValues($array)
+	{
+		$this->values = $array;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @delete a recored from a table
+	 *
+	 * @access public
+	 *
+	 * @param string $table The table name
+	 *
+	 * @param int ID
+	 *
+	 */
+	public function delete($table, $id)
+	{
+		try
+		{
+			// get the primary key name
+			$pk   = $this->getPrimaryKey($table);
+			$sql  = "DELETE FROM $table WHERE $pk=:$pk";
+			$stmt = $this->db->prepare($sql);
+			$stmt->bindParam(":$pk", $id);
+			$stmt->execute();
+		}
+		catch(\Exception $e)
+		{
+			$this->errors[] = $e->getMessage();
+		}
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @insert a record into a table
+	 *
+	 * @access public
+	 *
+	 * @param string $table The table name
+	 *
+	 * @param array $values An array of fieldnames and values
+	 *
+	 * @return int The last insert ID
+	 *
+	 */
+	public function insert($table, $values=null)
+	{
+		$values = is_null($values) ? $this->values : $values;
+		$sql = "INSERT INTO $table SET ";
+		$obj = new \CachingIterator(new \ArrayIterator($values));
+		try
+		{
+			foreach( $obj as $field=>$val)
+			{
+				$sql .= "$field = :$field";
+				$sql .=  $obj->hasNext() ? ',' : '';
+				$sql .= "\n";
+			}
+			$stmt = $this->db->conn->prepare($sql);
+			// bind the params
+			foreach($values as $k=>$v)
+			{
+				$stmt->bindParam(':'.$k, $v);
+			}
+			$stmt->execute($values);
+			// return the last insert id
+			return $this->db->lastInsertId();
+		}
+		catch(\Exception $e)
+		{
+			$this->errors[] = $e->getMessage();
+		}
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 * @update a table
+	 *
+	 * @access public
+	 * 
+	 * @param string $table The table name
+	 *
+	 * @param int $id
+	 *
+	 */
+	public function update($table, $id, $values=null)
+	{
+		$values = is_null($values) ? $this->values : $values;
+		try
+		{
+			// get the primary key/
+			$pk = $this->getPrimaryKey($table);
+	
+			// set the primary key in the values array
+			$values[$pk] = $id;
+			$obj = new \CachingIterator(new \ArrayIterator($values));
+			$sql = "UPDATE $table SET \n";
+			foreach( $obj as $field=>$val)
+			{
+				$sql .= "$field = :$field";
+				$sql .= $obj->hasNext() ? ',' : '';
+				$sql .= "\n";
+			}
+			$sql .= " WHERE $pk=$id";
+			$stmt = $this->db->prepare($sql);
+			// bind the params
+			foreach($values as $k=>$v)
+			{
+				$stmt->bindParam(':'.$k, $v);
+			}
+			// bind the primary key and the id
+			$stmt->bindParam($pk, $id);
+			$stmt->execute($values);
+			// return the affected rows
+			return $stmt->rowCount();
+		}
+		catch(\Exception $e)
+		{
+			$this->errors[] = $e->getMessage();
+		}
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 * get the name of the field that is the primary key 
+	 *
+	 * only in mysql
+	 *
+	 * @access private
+	 *
+	 * @param string $table The name of the table
+	 *
+	 * @return string
+	 *
+	 */
+	private function getPrimaryKey($table)
+	{
+		$pk = '';
+
+		switch ($this->dbtype)
+		{
+			case 'sqlite':
+				$sql = "PRAGMA table_info($table)";
+
+				foreach ($this->db->query($sql) as $rows)
+				{
+					if ($rows['pk'] == 1)
+					{
+						$pk = $rows['name'];
+						break;
+					}
+				}
+
+				break;
+
+			case 'mysql':
+				$sql = "SHOW COLUMNS FROM $table";
+
+				foreach ($this->db->query($sql) as $rows)
+				{
+					if ($rows['Key'] == 'PRI' && $rows['Extra'] == 'auto_increment')	
+					{
+						$pk = $rows['Key'];
+						break;
+					}
+				}
+
+				break;
+			
+			default:
+
+				throw new \Exception("Database type not supported", 1);
+				break;
+		}
+
+		return $pk;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 * 
+	 * build sql statement
+	 * 
+	 * @return string
+	 * 
+	 */
+	public function buildSql()
+	{
+		$sql = array_reduce( array(
+	            'SELECT',
+	            $this->fields,
+	            'FROM',
+	            "`$this->table`",
+	            $this->joins,
+	            $this->where,
+	            $this->groups,
+	            $this->having,
+	            $this->order,
+	            $this->limit,
+	        ),
+			function ($sql, $input)
+			{
+				return strlen($input) > 0 ? $sql . ' ' . $input : $sql;
+			}
+        );
+
+        // clear class properties
+		$this->where  = '';
+		$this->joins  = '';
+		$this->fields = '*';
+		$this->groups = '';
+		$this->order  = '';
+		$this->having = '';
+		$this->limit  = '';
+
+        return trim($sql);
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * Fetch all records from table
+	 *
+	 * @access public
+	 *
+	 * @param $table The table name
+	 *
+	 * @return array
+	 *
+	 */
+	public function query()
+	{
+		$this->sql = $this->buildSql();
+		$res = $this->db->query( $this->sql );
+
+		return $res;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @select statement
+	 *
+	 * @access public
+	 *
+	 * @param string $table
+	 *
+	 */
+	public function select($table)
+	{
+		$this->table = $table;
+
+		return $this;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 * 
+	 * join clauss
+	 * 	
+	 * @param  string  $table 
+	 *
+	 * @param  string $fields
+	 * 
+	 * @param  string $type
+	 * 
+	 * @return this
+	 * 
+	 */
+	public function join($table, $fields, $type = 'INNER')
+	{
+		$this->joins .= sprintf(" %s JOIN `%s` ON %s", $type, $table, $fields);
+
+		return $this;
+	}
+
+
+// ------------------------------------------------------------------------
+	/**
+	 * @where clause
+	 *
+	 * @access public
+	 *
+	 * @param string $field
+	 *
+	 * @param string $value
+	 *
+	 * @return this
+	 *
+	 */
+	public function where($field, $value, $operation = "=")
+	{
+		$this->where .= sprintf(" WHERE `%s` %s '%s'", $field, $operation, $value);
+
+		return $this;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @set limit
+	 *
+	 * @access public
+	 *
+	 * @param int $offset
+	 *
+	 * @param int $limit
+	 *
+	 * @return this 
+	 *
+	 */
+	public function limit($offset, $limit)
+	{
+		$this->limit .= sprintf(" LIMIT %s, %s", $offset, $limit);
+
+		return $this;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * @add an AND clause
+	 *
+	 * @access public
+	 *
+	 * @param string $field
+	 *
+	 * @param string $value
+	 *
+	 */
+	public function andClause($field, $value, $operation = '=')
+	{
+		$this->where .= sprintf(" AND `%s` %s '%s'", $field, $operation, $value);
+
+		return $this;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 * 
+	 * add or OR clause
+	 * 
+	 * @param string $field
+	 * 
+	 * @param string $value
+	 * 
+	 * @return this
+	 * 
+	 */
+	public function orClause($field, $value, $operation = '=')
+	{
+		$this->where .= sprintf(" OR `%s` %s '%s'", $field, $operation, $value);
+
+		return $this;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 * 
+	 * having clause
+	 * 
+	 * @param  string $field
+	 * 
+	 * @param  string $value
+	 * 
+	 * @return this
+	 * 
+	 */
+	public function having($field, $value)
+	{
+		$this->having .= empty($this->having) ? ' HAVING' : '';
+		$this->having .= sprintf(" `%s` %s", $field, $value);
+
+		return $this;
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * Add and order by
+	 *
+	 * @param string $fieldname
+	 *
+	 * @param string $order
+	 *
+	 * @return this
+	 * 
+	 */
+	public function orderBy($fieldname, $order='ASC')
+	{
+		$this->order .= sprintf(" ORDER BY `%s` %s", $fieldname, $order);
+
+		return $this;
+	}
+
+// end of class
 }
