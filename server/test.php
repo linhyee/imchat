@@ -19,7 +19,7 @@ function sendMail($to, $title, $content, $sign = '')
 
 	$r = $email->clear()
 		->to($to)
-		->from('sales@adisbodyjewelry.com', 'adisbodyjewelry')
+		->from('sales@adisbodyjewelry.com', '***')
 		->subject($title)
 		->message($content)
 		->send();
