@@ -118,7 +118,7 @@ struct url {
     struct vec  uri;
 };
 
-IMAPI void http_post(const char *url, const char *post);
+IMAPI void http_post(const char *url, const char *post, char *buf);
 IMAPI void http_get(const char *url, char *buf);
 IMAPI void elog(int fatal, const char *fmt, ...);
 

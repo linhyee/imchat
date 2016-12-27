@@ -8,15 +8,15 @@ namespace webservices;
  */
 class Controller
 {
-	public function actionUser($name)
-	{
-		// var_dump($_REQUEST);
-		// echo $name;
-		echo 'what! 你个老伙计~';
-	}
+    public function actionUser($name)
+    {
+        // var_dump($_REQUEST);
+        // echo $name;
+        echo 'what! 你个老伙计~';
+    }
 
-	public function action404()
-	{
-		header("HTTP/1.1 404 Not Found");exit;
-	}
+    public function action404()
+    {
+        header("HTTP/1.1 404 Not Found");exit;
+    }
 }

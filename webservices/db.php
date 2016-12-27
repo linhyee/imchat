@@ -14,7 +14,7 @@ class Db
      * 
      * @var array
      */
-    public $errors = array();
+    protected $errors = array();
 
     /**
      * 
@@ -262,7 +262,7 @@ class Db
 // ------------------------------------------------------------------------
     /**
      *
-     * @insert a record into a table
+     * @insert a record into a table (only mysql)
      *
      * @access public
      *
@@ -273,22 +273,22 @@ class Db
      * @return int The last insert ID
      *
      */
-    public function insert($table, $values=null)
+    public function insert($table, $values = null)
     {
         $values = is_null($values) ? $this->values : $values;
-        $sql = "INSERT INTO $table SET ";
-        $obj = new \CachingIterator(new \ArrayIterator($values));
+
+        $keys = implode(',', array_keys($values));
+        $vals = implode(',', array_map( function($item) { return ":$item"; },
+            array_keys($values)
+        ));
+
+        $sql = sprintf("INSERT INTO $table (%s) VALUES(%s)", $keys, $vals);
+
         try
         {
-            foreach( $obj as $field=>$val)
-            {
-                $sql .= "$field = :$field";
-                $sql .=  $obj->hasNext() ? ',' : '';
-                $sql .= "\n";
-            }
-            $stmt = $this->db->conn->prepare($sql);
+            $stmt = $this->db->prepare($sql);
             // bind the params
-            foreach($values as $k=>$v)
+            foreach ($values as $k => $v)
             {
                 $stmt->bindParam(':'.$k, $v);
             }
@@ -296,7 +296,7 @@ class Db
             // return the last insert id
             return $this->db->lastInsertId();
         }
-        catch(\Exception $e)
+        catch (\Exception $e)
         {
             $this->errors[] = $e->getMessage();
         }
@@ -474,6 +474,19 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
+     * 
+     * get errors
+     * 
+     * @return array
+     * 
+     */
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+// ------------------------------------------------------------------------
+    /**
      *
      * Fetch all records from table
      *
@@ -565,9 +578,9 @@ class Db
      * @return this 
      *
      */
-    public function limit($offset, $limit)
+    public function limit($offset, $limit = false)
     {
-        $this->limit .= sprintf(" LIMIT %s, %s", $offset, $limit);
+        $this->limit .= ($limit === false) ? sprintf(" LIMIT %s", $offset) : sprintf(" LIMIT %s, %s", $offset, $limit);
 
         return $this;
     }

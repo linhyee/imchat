@@ -34,7 +34,7 @@ void im_parse_protocol(Msg *msg, char *buf)
 	json = cJSON_Parse(buf);
 
 	if (!json)
-		elog("Error before: [%s]\n", cJSON_GetErrorPtr());
+		elog(1, "Error before: [%s]\n", cJSON_GetErrorPtr());
 
 	item = cJSON_GetObjectItem(json, "type");
 	msg->type = item->valueint;
