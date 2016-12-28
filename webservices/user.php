@@ -102,6 +102,14 @@ class User
     }
 
 // ------------------------------------------------------------------------
+    public function existsUser($search)
+    {
+        $rs = Db::getDb()->select($this->table)->where('name', $search)->orClause('fd', $search)->limit(1)->query();
+
+        return ($rs != NULL);
+    }
+
+// ------------------------------------------------------------------------
     /**
      * 
      * foo
