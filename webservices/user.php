@@ -102,11 +102,20 @@ class User
     }
 
 // ------------------------------------------------------------------------
+    /**
+     * 
+     * check an user
+     * 
+     * @param  string $search
+     * 
+     * @return boolean
+     * 
+     */
     public function existsUser($search)
     {
-        $rs = Db::getDb()->select($this->table)->where('name', $search)->orClause('fd', $search)->limit(1)->query();
-
-        return ($rs != NULL);
+        $rs = Db::getDb()->select($this->table)->where('username', $search)->orClause('fd', $search)->limit(1)->query();
+        
+        return !!$rs->fetchAll(\PDO::FETCH_ASSOC);
     }
 
 // ------------------------------------------------------------------------

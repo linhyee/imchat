@@ -108,7 +108,11 @@ class Api
 
         $rs = User::_getUserByName('kate');
         var_dump($rs);
+
+        $rs = User::_existsUser('dave');
+        var_dump($rs);
     }
 }
 
-Api::run();
+// Api::run();
+Api::usertest();

@@ -475,6 +475,19 @@ class Db
 // ------------------------------------------------------------------------
     /**
      * 
+     * get last query sql
+     * 
+     * @return string
+     * 
+     */
+    public function getLastSql()
+    {
+        return $this->sql;
+    }
+
+// ------------------------------------------------------------------------
+    /**
+     * 
      * get errors
      * 
      * @return array
