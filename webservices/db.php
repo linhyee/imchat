@@ -1,114 +1,114 @@
-<?php 
+<?php
 namespace webservices;
 
 /**
- * 
+ *
  * @package  webservices.db
  * @author  mrlin <714480119@qq.com>
  */
 class Db
 {
     /**
-     * 
+     *
      * errors
-     * 
+     *
      * @var array
      */
     protected $errors = array();
 
     /**
-     * 
+     *
      * table
-     * 
+     *
      * @var string
      */
     protected $table = '';
 
     /**
-     * 
+     *
      * table fields
-     * 
+     *
      * @var string
      */
     protected $fields = '*';
 
     /**
-     * 
+     *
      * where condition
-     * 
+     *
      * @var string
      */
     protected $where = '';
 
     /**
-     * 
+     *
      * joins statement
-     * 
+     *
      * @var string
      */
     protected $joins = '';
 
     /**
-     * 
+     *
      * order statement
-     * 
+     *
      * @var string
      */
     protected $order = '';
 
     /**
-     * 
+     *
      * group by
-     * 
+     *
      * @var string
      */
     protected $groups = '';
 
     /**
-     * 
+     *
      * having statement
-     * 
+     *
      * @var string
      */
     protected $having = '';
 
     /**
-     * 
+     *
      * limit
-     * 
+     *
      * @var string
      */
     protected $limit = '';
 
 
     /**
-     * 
+     *
      * sql statement
-     * 
+     *
      * @var string
      */
     protected $sql = "";
 
     /**
-     * 
+     *
      * name => value pairs
-     * 
+     *
      * @var array
      */
     protected $values = array();
 
     /**
-     * 
+     *
      * The pdo
-     * 
+     *
      * @var null
      */
     protected $db = null;
 
     /**
-     * 
+     *
      * database type mysql ? pgsql ? mmsql ?
-     * 
+     *
      * @var string
      */
     protected $dbtype = '';
@@ -181,9 +181,9 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * singlon method
-     * 
+     *
      * @return \Db
      */
     public static function getDb()
@@ -307,7 +307,7 @@ class Db
      * @update a table
      *
      * @access public
-     * 
+     *
      * @param string $table The table name
      *
      * @param int $id
@@ -320,7 +320,7 @@ class Db
         {
             // get the primary key/
             $pk = $this->getPrimaryKey($table);
-    
+
             // set the primary key in the values array
             $values[$pk] = $id;
             $obj = new \CachingIterator(new \ArrayIterator($values));
@@ -352,7 +352,7 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * get the name of the field that is the primary key 
+     * get the name of the field that is the primary key
      *
      * only in mysql
      *
@@ -388,7 +388,7 @@ class Db
 
                 foreach ($this->db->query($sql) as $rows)
                 {
-                    if ($rows['Key'] == 'PRI' && $rows['Extra'] == 'auto_increment')    
+                    if ($rows['Key'] == 'PRI' && $rows['Extra'] == 'auto_increment')
                     {
                         $pk = $rows['Key'];
                         break;
@@ -396,7 +396,7 @@ class Db
                 }
 
                 break;
-            
+
             default:
 
                 throw new \Exception("Database type not supported", 1);
@@ -405,16 +405,16 @@ class Db
 
         return $pk;
     }
- 
+
 // ------------------------------------------------------------------------
     /**
-     * 
-     * Wraps quotes around a string and escapes the content for a string parameter. 
-     * 
+     *
+     * Wraps quotes around a string and escapes the content for a string parameter.
+     *
      * @param  string $value
-     * 
+     *
      * @return string
-     * 
+     *
      */
     public function escape($value)
     {
@@ -434,11 +434,11 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * build sql statement
-     * 
+     *
      * @return string
-     * 
+     *
      */
     public function buildSql()
     {
@@ -474,11 +474,11 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * get last query sql
-     * 
+     *
      * @return string
-     * 
+     *
      */
     public function getLastSql()
     {
@@ -487,11 +487,11 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * get errors
-     * 
+     *
      * @return array
-     * 
+     *
      */
     public function getErrors()
     {
@@ -507,15 +507,15 @@ class Db
      *
      * @param $table The table name
      *
-     * @return array
+     * @return PDOStatement 
      *
      */
     public function query()
     {
         $this->sql = $this->buildSql();
-        $res = $this->db->query( $this->sql );
+        $pdostatement = $this->db->query( $this->sql );
 
-        return $res;
+        return $pdostatement;
     }
 
 // ------------------------------------------------------------------------
@@ -537,17 +537,17 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * join clauss
-     *  
-     * @param  string  $table 
+     *
+     * @param  string  $table
      *
      * @param  string $fields
-     * 
+     *
      * @param  string $type
-     * 
+     *
      * @return this
-     * 
+     *
      */
     public function join($table, $fields, $type = 'INNER')
     {
@@ -588,7 +588,7 @@ class Db
      *
      * @param int $limit
      *
-     * @return this 
+     * @return this
      *
      */
     public function limit($offset, $limit = false)
@@ -619,15 +619,15 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * add or OR clause
-     * 
+     *
      * @param string $field
-     * 
+     *
      * @param string $value
-     * 
+     *
      * @return this
-     * 
+     *
      */
     public function orClause($field, $value, $operation = '=')
     {
@@ -638,15 +638,15 @@ class Db
 
 // ------------------------------------------------------------------------
     /**
-     * 
+     *
      * having clause
-     * 
+     *
      * @param  string $field
-     * 
+     *
      * @param  string $value
-     * 
+     *
      * @return this
-     * 
+     *
      */
     public function having($field, $value)
     {
@@ -666,7 +666,7 @@ class Db
      * @param string $order
      *
      * @return this
-     * 
+     *
      */
     public function orderBy($fieldname, $order='ASC')
     {

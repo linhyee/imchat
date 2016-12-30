@@ -1,6 +1,12 @@
 <?php
 namespace webservices;
 
+/**
+ * 
+ * @package  webservices.jwt
+ * @author  mrlin <714480119@qq.com>
+ */
+
 class Jwt
 {
     /**
