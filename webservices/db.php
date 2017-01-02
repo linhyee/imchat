@@ -277,6 +277,11 @@ class Db
     {
         $values = is_null($values) ? $this->values : $values;
 
+        if (empty($values))
+        {
+            throw new \Exception("No values input", 1);
+        }
+
         $keys = implode(',', array_keys($values));
         $vals = implode(',', array_map( function($item) { return ":$item"; },
             array_keys($values)
@@ -316,6 +321,12 @@ class Db
     public function update($table, $id, $values=null)
     {
         $values = is_null($values) ? $this->values : $values;
+
+        if (empty($values))
+        {
+            throw new \Exception("Error Processing values", 1);
+        }
+
         try
         {
             // get the primary key/

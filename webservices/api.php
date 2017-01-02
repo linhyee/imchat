@@ -6,6 +6,7 @@ include 'user.php';
 include 'config.php';
 include 'controller.php';
 include 'jwt.php';
+// include 'http.php';
 
 
 use webservices\Controller;
@@ -112,7 +113,22 @@ class Api
         $rs = User::_existsUser('dave');
         var_dump($rs);
     }
+
+    /**
+     * @test
+     * 
+     * @noreturn
+     */
+    public static function httptest()
+    {
+        $rs = Http::getHttp()->get('http://www.baidu.com');
+        // echo $rs['body'];
+
+        $rs = Http::getHttp()->post(array('fd'=>1, 'time'=>time()))->submit("http://www.baidu.com");
+
+        print_r($rs);
+    }
 }
 
-// Api::run();
-Api::usertest();
+Api::run();
+// Api::httptest();

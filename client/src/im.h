@@ -36,6 +36,7 @@ extern "C"
  * eg: {
  *      'type': 'console', // 1 => console, 2 => web, 3 => app
  *      'chat': 'u',       // u => send to user, a => send all
+ *      'proto' : 'ws',    // ws => websocket, tcp => tcp
  *      'to': 'andy',
  *      'from' : 'mary',
  *      'data' : 'hello world!'
