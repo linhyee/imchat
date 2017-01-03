@@ -7,10 +7,108 @@
 	<link rel="stylesheet" type="text/css" href="./assets/css/ichat-im.css">
 </head>
 <body>
-	<div class="uk-container uk-container-center">
-		<div class="uk-panel uk-panel-box-primary">Ichat-IM</div>
+	<div id="main">
+		<div class="container">
+			<div id="header">Ichat-IM</div>
+			<div id="main-div">
+				<div id="box1">
+				</div>
+				<div id="box2">
+					<div id="row-1">
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+						<p>ABCDED</p>
+					</div>
+					
+					<div id="row-2">
+						<div class="send-msg-box-wrapper">
+							<div id="inputbox" style="display: none;">
+								<div class="input-area">
+									<ul class="tool-bar">
+										<li class="tool-item">
+											<i class="" title="表情"></i>
+											<div class="faceDiv"></div>
+										</li>
+										<li class="tool-item">
+											<i class="" onclick="upload()" title="图片"></i>
+										</li>
+									</ul>
+									<span class="user-guide">Enter 发送 , Ctrl+Enter 换行</span>
+
+									<div class="msg-box" style="height:100%;">
+										<textarea class="input-msg-box" onkeydown="chat.keySend(event);" id="chattext"></textarea>
+									</div>
+
+								</div>
+
+								<div class="action-area">
+									<a href="javascript:;" class="send-message-button" onclick="chat.sendMessage()">发送</a>
+								</div>
+							</div>
+
+							<div id="loginbox" class="area" style="width:100%;text-align:center;display:block;">
+								<form action="javascript:void(0)" onsubmit="return chat.doLogin('','');">
+									<div class="clearfix" style="margin-top:35px">
+										<input name="name" id="name" style="margin-right:20px;width:250px;" placeholder="请输入昵称" class="fm-input" value="" type="text">
+										<input id="email" class="fm-input" style="margin-right:20px;width:250px;" name="email" placeholder="请输入Email" type="text">
+										<button type="submit" class="btn">登录</button>
+									</div>
+									
+								</form>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>
 
-<script src="./assets/js/jquery.min.js"></script>
+<script src="./assets/js/config.js"></script>
+<script src="./assets/js/ichat.js"></script>

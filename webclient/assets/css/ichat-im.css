@@ -1,15 +1,121 @@
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video { margin: 0px; padding: 0px; border: 0px none; font-family: inherit; font-style: inherit; font-weight: inherit; line-height: inherit; font-size-adjust: inherit; font-stretch: inherit; font-feature-settings: inherit; font-language-override: inherit; font-kerning: inherit; font-synthesis: inherit; font-variant: inherit; font-size: 100%; vertical-align: baseline; }
+/*html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video { margin: 0px; padding: 0px; border: 0px none; font-family: inherit; font-style: inherit; font-weight: inherit; line-height: inherit; font-size-adjust: inherit; font-stretch: inherit; font-feature-settings: inherit; font-language-override: inherit; font-kerning: inherit; font-synthesis: inherit; font-variant: inherit; font-size: 100%; vertical-align: baseline; }*/
 html { line-height: 1; }
 ol, ul { list-style: outside none none; }
 q::before, q::after, blockquote::before, blockquote::after { content: none; }
-html, body { width: 100%; height: 100%; overflow: hidden; color: rgb(34, 34, 34); font-size: 14px; line-height: 1.3em; font-family: "冬青黑体简体中文","Tahoma","Hiragino Sans GB","Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important; }
-html { background: rgb(90, 131, 183) url('../images/main-bg.png') no-repeat scroll 0% 0% / cover ; }
-body { box-sizing: border-box; }
-input, textarea, keygen, select, button { font-family: "冬青黑体简体中文","Tahoma","Hiragino Sans GB","Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important; }
-pre { white-space: pre-wrap; }
-@font-face {
-	font-family: "iconfont";
-	font-style: normal;
-	font-weight: normal;
-	src: url('../fonts/iconfont.woff') format("woff");
+td {margin:0;padding: 0;}
+html, body {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	color: rgb(34, 34, 34);
+	font-size: 14px;
+	line-height: 1.3em;
+	font-family: "冬青黑体简体中文","Tahoma","Hiragino Sans GB","Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important;
+}
+
+body {
+	box-sizing: border-box;
+}
+input, textarea, keygen, select, button {
+	font-family: "冬青黑体简体中文","Tahoma","Hiragino Sans GB","Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important;
+}
+pre {
+	white-space: pre-wrap;
+}
+
+#main {
+	width: 100%;
+	height: 100%;
+	padding-top: 1px;
+}
+
+.container {
+	position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1000px;
+    height: 602px;
+    margin-left: -500px;
+    margin-top: -301px;
+    overflow: hidden;
+    border: 1px dashed #ccc;
+}
+
+#header {
+    width: 100%;
+    height: 29px;
+    line-height: 29px;
+    text-align: center;
+    border-bottom: 1px dashed #ccc;
+    background: #eee repeat;
+}
+
+#main-div {
+    display: block;
+    width: 100%;
+    height: 572px;
+}
+
+#box1 {
+	float: left;
+	width: 233px; 
+    height: 100%;
+    background-color: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+#box2 {
+	position: relative;
+	float: right;
+	width: 765px;
+    height: 100%;
+    border-left: 1px dashed #ccc;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+#box2 #row-1 {
+	width: 100%;
+	height: 465px;
+	background-color: #fff;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#box2 #row-2 {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	min-height: 106px;
+	border-top: 1px dashed #ccc;
+}
+
+.btn {
+    width: 100px;
+    height: 27px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+    outline: 0 none;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    display: inline-block;
+	text-align: center;
+    text-decoration: none;
+    font-size: 12px;
+}
+.fm-input {
+	border: 1px solid #ccc;	
+	box-sizing: border-box;
+    color: rgb(34, 34, 34);
+    font-size: 12px;
+    border: 1px solid rgb(225, 225, 225);
+    border-radius: 3px;
+    background-color: rgb(255, 255, 255);
+    padding: 5px;
+    outline: 0px none;
 }

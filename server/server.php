@@ -57,7 +57,7 @@ class Server
 			$this->initialize($config);
 		}
 
-		$this->serv = new \Swoole\Server($this->addr, $port);
+		$this->serv = new \Swoole\Server($this->addr, $this->port);
 		$this->serv->set($this->config);
 
 		$this->serv->on('connect', array($this, 'onConnect'));
@@ -160,6 +160,10 @@ class Server
 				# code...
 				break;
 		}
+
+		var_dump($data);
+
+		echo "receive data $data\n";
 	}
 
 // ------------------------------------------------------------------------
@@ -176,7 +180,7 @@ class Server
 	 */
 	public function onClose($serv, $fd)
 	{
-
+		echo "client $fd disconnected\n";
 	}
 
 // ------------------------------------------------------------------------
