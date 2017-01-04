@@ -149,6 +149,8 @@ class Server
 	 */
 	public function onReceive($serv, $fd, $fromId, $data)
 	{
+		var_dump($data);
+		
 		$data = json_decode($data, true);
 		switch (ord($data['chat'])) {
 			case 'u':
@@ -161,7 +163,6 @@ class Server
 				break;
 		}
 
-		var_dump($data);
 
 		echo "receive data $data\n";
 	}
