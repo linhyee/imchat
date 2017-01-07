@@ -1,2 +1,2 @@
 # iChat-im
-控制台聊天室
+聊天室(web版, teminal版)
