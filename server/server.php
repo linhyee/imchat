@@ -36,6 +36,14 @@ class Server
 
 	/**
 	 * 
+	 * connection list
+	 * 
+	 * @var array
+	 */
+	protected $connections = array();
+
+	/**
+	 * 
 	 * server properties
 	 * 
 	 * @var array
@@ -78,7 +86,7 @@ class Server
 	 * @noreturn
 	 * 
 	 */
-	public static function start()
+	public static function run()
 	{
 		$serv = new self(Config::getConfig());
 	}
@@ -149,20 +157,28 @@ class Server
 	 */
 	public function onReceive($serv, $fd, $fromId, $data)
 	{
-		var_dump($data);
-		
 		$data = json_decode($data, true);
-		switch (ord($data['chat'])) {
+		$type = 'message';
+
+		switch (ord($data['chat']))
+		{
 			case 'u':
-				# code...
+				$data = Chat::msgpack($fd, 'u', $data);
 				break;
+
 			case 'a':
+				$data = Chat::msgpack($fd, 'a', $data);
 				break;
+
 			default:
-				# code...
 				break;
 		}
 
+		$this->serv->task(json_encode(array(
+			'task'  => $type,
+			'data'  => $data,
+			'param' => '',
+		)));
 
 		echo "receive data $data\n";
 	}
@@ -181,6 +197,8 @@ class Server
 	 */
 	public function onClose($serv, $fd)
 	{
+
+		$this->serv->task();
 		echo "client $fd disconnected\n";
 	}
 
@@ -199,7 +217,7 @@ class Server
 	 */
 	public function onFinish($serv, $taskId, $data)
 	{
-
+		echo 'task ' .$taskId. ' finish\n';
 	}
 
 // ------------------------------------------------------------------------
@@ -220,6 +238,19 @@ class Server
 	 */
 	public function onTask($serv, $taskId, $fromId, $data)
 	{
+		$data = json_decode($data, true);
 
+		switch ($data['task']) {
+			case 'login':
+				Chat::doLogin($serv, $data['package']);
+				break;
+
+			case 'message':
+				Chat::send($serv, $data['package']);
+				break;
+
+			default:
+				break;
+		}
 	}
 }

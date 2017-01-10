@@ -17,6 +17,7 @@ class User
      *     'logintime' : 1423123421,
      *     'type' : 1 // 1 => console, 2 => web, 3 => app
      *     'username' : 'kate',
+     *     'identify' : 'root',  //root, user
      *     'remoteip' : '48.123.10.47'
      * }
      *
