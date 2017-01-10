@@ -15,6 +15,14 @@ class Chat
 	 */
 	public $serv = null;
 
+	/**
+	 * 
+	 * The authencation host
+	 * 
+	 * @var string
+	 */
+	public $apiHost = 'http://192.168.66.10';
+
 // ------------------------------------------------------------------------
 	/**
 	 * 
@@ -38,7 +46,7 @@ class Chat
 	 * 		'msg'  : '', // wrong message
 	 * 		'data' : {
 	 *   		'id'       : 'present',
-	 *   		'uqid'     : '2', // fd
+	 *   		'uqid'     : '2', // The received fd
 	 *   		'username' : 'kate',
 	 *   		'email'    : 'abc@qq.com',
 	 * 		},
@@ -51,30 +59,64 @@ class Chat
 	 */
 	public function doLogin($data)
 	{
-		print_r($data);
-
 		$user = array(
 			'fd'        => $data['fd'],
 			'logintime' => $data['logintime'],
 			'type'      => $data['type'],
 			'username'  => $data['username'],
+			'email'     => $data['email'],
 			'remoteip'  => $data['remoteip'],
 		);
 
-		// Http::getHttp()->post($user)->submit('http://192.168.66.10/api.php?a=adduser');
+		//check if logined user exists
+		$ret = Http::getHttp()->get($this->apiHost . '/api?a=user&u='.$data['username'].'&e='.$data['email']);
 
+		if ($ret['body'] == -1)
+		{
+			$wxs = array(
+				'code' => -1,
+				'msg'  => 'username or email already exists',
+				'data' => '',
+			);
+			goto end;
+		}
+
+		// add user
+		Http::getHttp()->post($user)->submit($this->apiHost . '/api.php?a=adduser');
 		self::broadcast();
 
 		//登录成功, 返回出席信息
-
-		return array(
+		$wxs = array(
+			'code' => 0,
+			'msg'  => 'login success',
+			
+			'data' => array(
+				'id'       => 'present',
+				'uqid'     => $data['fd'],
+				'username' => $data['username'],
+				'email'    => $data['email'],
+			),
 		);
+
+		end:
+		return $wxs;
 	}
 
 // ------------------------------------------------------------------------
 	/**
 	 * 
 	 * 返回消息报文
+	 *
+	 * {
+	 *		'code' : 0,
+	 *		'msg'  : '',
+	 *		'data' : {
+	 *			'id'   : 'message',
+	 *			'uqid' : '2',
+	 *			'chat' : 'a', //a=>all, u=>someone
+	 *			'data' : 'hello world!',
+	 *		}
+	 * }
 	 * 
 	 * @param  array $data
 	 * 
@@ -82,6 +124,29 @@ class Chat
 	 * 
 	 */
 	public function doMessage($data)
+	{
+
+	}
+
+// ------------------------------------------------------------------------
+	/**
+	 *
+	 * 返回退出报文
+	 * {
+	 * 		'code' : 0,
+	 * 		'msg'  : '',
+	 * 		'data' : {
+	 * 			'id' : 'quit',
+	 * 			'uqid' : '2',
+	 * 			'data' : 'someone logout!',
+	 * 		}
+	 * }
+	 * 
+	 * @param  array $data
+	 * 
+	 * @return array
+	 */
+	public function doLogout($data)
 	{
 
 	}
