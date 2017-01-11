@@ -6,6 +6,7 @@ include 'server.php';
 include 'chat.php';
 include 'log.php';
 include 'config.php';
+include '../webservices/http.php';
 
 use server\Server;
 use server\Wsserver;

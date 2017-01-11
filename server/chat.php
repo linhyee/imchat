@@ -1,6 +1,8 @@
 <?php
 namespace server;
 
+use webservices\Http;
+
 /**
  *
  * @package server.chat
@@ -13,7 +15,7 @@ class Chat
 	 * 
 	 * @var null
 	 */
-	public $serv = null;
+	public $ws = null;
 
 	/**
 	 * 
@@ -23,17 +25,38 @@ class Chat
 	 */
 	public $apiHost = 'http://192.168.66.10';
 
+	/**
+	 * 
+	 * server type
+	 * 
+	 * @var string
+	 */
+	public $protocol = 'ws';
+
+
+	/**
+     * 
+     * The connctions list
+     * 
+     * @var array
+     */
+    public $connections = array();
+
+
 // ------------------------------------------------------------------------
 	/**
 	 * 
 	 * @__construct
 	 * 
-	 * @param object $serv
+	 * @param object $ws
+	 *
+	 * @param string $proto
 	 * 
 	 */
-	public function __construct ($serv)
+	public function __construct ($ws, $proto = 'ws')
 	{
-		$this->serv = $serv;		
+		$this->ws       = $ws;
+		$this->protocol = $proto;
 	}
 
 // ------------------------------------------------------------------------
@@ -57,19 +80,24 @@ class Chat
 	 * @noreturn
 	 * 
 	 */
-	public function doLogin($data)
+	public function doLogin($fd, $data)
 	{
-		$user = array(
-			'fd'        => $data['fd'],
-			'logintime' => $data['logintime'],
-			'type'      => $data['type'],
-			'username'  => $data['username'],
-			'email'     => $data['email'],
-			'remoteip'  => $data['remoteip'],
-		);
+		$email = isset($data['e']) ? $data['e'] : '';
+		$uname = isset($data['u']) ? $data['u'] : '';
+
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($username))
+        {
+        	$wxs = array(
+				'code' => -2,
+				'msg'  => 'invalid request data',
+				'data' => '',
+        	);
+            goto end;
+        }
+
 
 		//check if logined user exists
-		$ret = Http::getHttp()->get($this->apiHost . '/api?a=user&u='.$data['username'].'&e='.$data['email']);
+		$ret = Http::getHttp()->get($this->apiHost . '/api?a=user&u='.$uname.'&e='.$email);
 
 		if ($ret['body'] == -1)
 		{
@@ -81,9 +109,18 @@ class Chat
 			goto end;
 		}
 
+		$user = array(
+			'fd'        => $fd,
+			'logintime' => time(),
+			'type'      => 2, //web end
+			'username'  => $uname,
+			'email'     => $email,
+			'remoteip'  => $data['remoteip'],
+		);
+
+
 		// add user
 		Http::getHttp()->post($user)->submit($this->apiHost . '/api.php?a=adduser');
-		self::broadcast();
 
 		//登录成功, 返回出席信息
 		$wxs = array(
@@ -99,7 +136,7 @@ class Chat
 		);
 
 		end:
-		return $wxs;
+		$this->send($fd, $wxs);
 	}
 
 // ------------------------------------------------------------------------
@@ -118,14 +155,23 @@ class Chat
 	 *		}
 	 * }
 	 * 
+	 * @param int $fd
+	 * 
 	 * @param  array $data
 	 * 
-	 * @return array
+	 * @noreturn
 	 * 
 	 */
-	public function doMessage($data)
+	public function doMessage($fd, $data)
 	{
+		$wxs = array(
+			'code' => 0,
+			'msg'  => 'received success',
+			'data' => array(
+			),
+		);
 
+		$this->send($fd, $wxs);
 	}
 
 // ------------------------------------------------------------------------
@@ -144,11 +190,22 @@ class Chat
 	 * 
 	 * @param  array $data
 	 * 
-	 * @return array
+	 * @noreturn
 	 */
-	public function doLogout($data)
+	public function doLogout($fd, $data)
 	{
+		$wxs = array(
+			'code' => 0,
+			'msg'  => 'logout',
+			'data' => array(
+			),
+		);
 
+		print_r($this->connections);
+
+		echo "doing logout\r\n";
+
+		$this->send($fd, $wxs);
 	}
 
 // ------------------------------------------------------------------------
@@ -158,46 +215,36 @@ class Chat
 	 * 
 	 * @param  int $fd
 	 * 
-	 * @param  array $message
+	 * @param  array $data
 	 *
 	 * @noreturn
 	 */
-	public function send($fd, $message)
+	protected function send($fd, $data)
 	{
-		$jsonstr = Http::getHttp()->get('http://192.168.66.10/api.php?a=userlist');
+		$func = $this->protocol == 'ws' ? 'push' : 'send';
 
-		$conns = json_encode($jsonstr);
-
-		foreach ($conns as $conn)
+		if ($data['code'] !== 0)
 		{
-			$mssage['data']['mine'] = $conn->fd === $fd? 1 : 0;
+			$this->ws->serv->$func($fd, json_encode($data));
 
-			$this->serv->send($conn->fd, $json_encode($mssage));
+			//close the exception fd
+			print_r($this->ws->connections);
+			$this->ws->serv->close($fd);
 		}
-	}
 
-// ------------------------------------------------------------------------
-	/**
-	 * 
-	 * pack message data
-	 * 
-	 * @return array
-	 * 
-	 */
-	public function msgpack()
-	{
-		return array();
-	}
+		// get all connections
+		$ret   = Http::getHttp()->get($this->apiHost . '/api.php?a=userlist');
+		$conns = json_decode($ret['body']);
 
-// ------------------------------------------------------------------------
-	/**
-	 * 
-	 * broadcast user login event
-	 * 
-	 * @noreturn
-	 */
-	public function broadcast()
-	{
+		if ($conns)
+		{
+			foreach ($conns as $conn)
+			{
+				//标记是否是自己的报文(eg: present, logout), 用于客户端会话
+				$data['data']['mine'] = $conn->fd === $fd ? 1 : 0;
 
+				$this->ws->serv->$func($conn->fd, json_encode($data));
+			}
+		}
 	}
 }

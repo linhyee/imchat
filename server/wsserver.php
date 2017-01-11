@@ -9,11 +9,20 @@ namespace server;
 class Wsserver extends Baseserver implements INetserver
 {
     /**
+     * 
      * chat
      * 
      * @var null 
      */
-    protected $chat = null;
+    public $chat = null;
+
+    /**
+     * 
+     * The connctions list
+     * 
+     * @var array
+     */
+    public $connections = array();
 
 // ------------------------------------------------------------------------
     /**
@@ -21,6 +30,9 @@ class Wsserver extends Baseserver implements INetserver
      */
     public function __construct()
     {
+        //init chat
+        $this->chat = new Chat($this);
+
         $this->serv = new \Swoole\Websocket\Server($this->addr, $this->port);
         $this->serv->set($this->config);
 
@@ -29,9 +41,6 @@ class Wsserver extends Baseserver implements INetserver
         $this->serv->on('task', array($this, 'onTask'));
         $this->serv->on('finish', array($this, 'onFinish'));
         $this->serv->on('close', array($this, 'onClose'));
-
-        //init chat
-        $this->chat = new Chat($this->serv);
 
         //start a server
         $this->serv->start();
@@ -51,41 +60,27 @@ class Wsserver extends Baseserver implements INetserver
 
 // ------------------------------------------------------------------------
     /**
+     *
+     * chat/?u=xxxx&e=sample@xx.com&k=md5('xxx')
+     *
+     * u=>用户名, e=>邮箱, k=>后台管理Key
      * 
      * @inheritdoc
      */
     public function onConnect($serv, $req)
     {
-        $username = isset($req->get['u']) ? $req->get['u'] : '';
-        $email    = isset($req->get['e']) ? $req->get['e'] : '';
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($username))
-        {
-            $this->serv->close($req->fd);
-            echo "ws client " .$req->fd. " have been closed forcedfully\r\n";
-            goto end;
-        }
-
-        $user = array(
-            'fd'        => $req->fd,
-            'type'      => '2', //from ws client
-            'identify'  => 'user',
-            'logintime' => time(),
-            'email'     => $email,
-            'username'  => $username,
-            'remoteip'  => $req->server['remote_addr'],            
-        );
+        $get             = isset($req->get) ? $req->get : array();
+        $get['remoteip'] = $req->server['remote_addr'];
 
         $this->serv->task(json_encode(array(
             'fd'      => $req->fd,
             'task'    => 'login',
-            'package' => $user,
+            'package' => $get,
         )));
 
-        echo "ws client ". $req->fd ." connected\r\n";
+        $this->connections[$req->fd] = $req->fd;
 
-        end:
-        ;
+        echo "ws client ". $req->fd ." connected\r\n";
     }
 
 // ------------------------------------------------------------------------
@@ -122,44 +117,35 @@ class Wsserver extends Baseserver implements INetserver
 // ------------------------------------------------------------------------
     /**
      *
+     * handle the task job
+     * 
      * @inheritdoc
      */
     public function onTask($serv, $taskId, $fromId, $data)
     {
-        //返回ws端的报文格式
-        $ret = array(
-            'code' => 0,       // 错误代码
-            'msg'  => '',      // 错误提示
-            'data' => array(), // 消息响应报文
-        );
-
         $data = json_decode($data, true);
 
         switch ($data['task'])
         {
             case 'login':
                 //出席信息
-                $pack = $this->chat->doLogin($data['package']);
+                $this->chat->doLogin($data['fd'], $data['package']);
                 break;
 
             case 'message':
                 //消息信息
-                $pack = $this->chat->doMessage($data['package']);
+                $this->chat->doMessage($data['fd'], $data['package']);
                 break;
 
             case 'logout':
                 //退出信息
-                $pack = $this->chat->doLogout($data['package']);
-                break;
-            
-            default:
-                $pack = $ret;
+                $this->chat->doLogout($data['fd'], $data['package']);
                 break;
         }
 
-        $this->chat->send($data['fd'], $data['package']);
-
         echo "worker[$fromId] get the task, taskId=$taskId\r\n";
+
+        return true;
     }
 
 // ------------------------------------------------------------------------
@@ -185,7 +171,7 @@ class Wsserver extends Baseserver implements INetserver
             'package' => array(),
         );
 
-        $this->serv->task(json_decode($data));
+        $this->serv->task(json_encode($data));
 
         echo "client $fd disconnected\r\n";
     }

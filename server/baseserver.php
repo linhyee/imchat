@@ -13,7 +13,7 @@ class Baseserver
 	 * 
 	 * @var object
 	 */
-	protected $serv = null;
+	public $serv = null;
 
 	/**
 	 * 
@@ -37,7 +37,7 @@ class Baseserver
 	 * 
 	 * @var array
 	 */
-	protected $config = array('worker_num' => 4, 'daemonize' => false, 'task_worker_num' => 4);
+	protected $config = array('worker_num' => 2, 'daemonize' => false, 'task_worker_num' => 2);
 
 	/**
 	 * 
