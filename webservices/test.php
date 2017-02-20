@@ -9,6 +9,7 @@ include 'jwt.php';
 include 'http.php';
 include 'email.php';
 include 'thread.php';
+include 'array2xml.php';
 
 /**
  * 
@@ -138,7 +139,95 @@ class Test
 
         echo $email->print_debugger();
     }
+
+    public static function arr2xmltest()
+    {
+        $input = array(
+            'product' => array(
+                '@id'  => 7,
+                'name' => 'some string',
+                'seo'  => 'some-string',
+                'ean'  => '',
+                'producer' => array(
+                    'name' => null,
+                    'photo' => '1.png'
+                ),
+
+                'stock' => 123,
+                'trackstock' => 0,
+                'new' => 0,
+                'pricewithoutvat' => 1111,
+                'price' => 1366.53,
+                'discountpricenetto' => null,
+                'discountprice' => null,
+                'vatvalue' => 23,
+                'currencysymbol' => 'PLN',
+                '#description' => '',
+                '#longdescription' => '',
+                '#shortdescription' => '',
+
+                'category' => array(
+                    'photo' => '1.png',
+                    'name' => 'test3',
+                ),
+
+                'staticattributes' => array(
+                    'attributegroup' => array(
+                        1 => array(
+                            '@name' => 'attributes group',
+                            'attribute' => array(
+                                0 => array(
+                                    'name' => 'second',
+                                    'description' => '<p>desc2</p>',
+                                    'file' => '',
+                                ),
+                                1 => array(
+                                    'name' => 'third',
+                                    'description' => '<p>desc3</p>',
+                                    'file' => '',
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+
+                'attributes' => array(),
+
+                'photos' => array(
+                   'photo' => array(
+                        0 => array(
+                            '@mainphoto' => '1',
+                            '%' => '1.png',
+                        ),
+                        1 => array(
+                            '@mainphoto' => '0',
+                            '%' => '2.png',
+                        ),
+                        2 => array(
+                            '@mainphoto' => '0',
+                            '%' => '3.png',
+                        ),
+                    ),
+                ),
+            ),
+        );
+
+        $arr2xml = new Array2XML();
+        echo $arr2xml->buildXml($input, 'data'), "\r\n";
+
+        $foo = array(
+          'Lighting_ProductType_LightsAndFixtures_BaseDiameter_@unitOfMeasure' => 'MM',
+          'Lighting_ProductType_LightsAndFixtures_BaseDiameter_a_0_@unitOfMeasure' => 'MM',
+          'Lighting_ProductType_LightsAndFixtures_BaseDiameter_a_0_%' => '12.2',
+          'Lighting_ProductType_LightsAndFixtures_BaseDiameter_b_0_@unitOfMeasure' => '12.2',
+          'Lighting_ProductType_LightsAndFixtures_BaseDiameter_b_0_%' => '12.2',
+          'A_B_C_D_E_F' => 'hee!',
+        );
+
+        print_r($arr2xml->mapArrayData($foo));
+    }
 }
 
 // Test::emailtest('714480119@qq.com', 'test', 'hello world!');
-Test::httptest();
+// Test::httptest();
+Test::arr2xmltest();
