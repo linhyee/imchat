@@ -1,5 +1,6 @@
 <?php
 namespace webservices;
+
 use XmlWriter;
 
 /**
@@ -27,6 +28,13 @@ class Array2XML
     private $encoding;
 
     /**
+     * with XML declaration ?
+     * 
+     * @var boolean
+     */
+    private $declaration = true;
+
+    /**
     * Construct Array2XML object with selected version and encoding 
     *
     * for available values check XmlWriter docs http://www.php.net/manual/en/function.xmlwriter-start-document.php
@@ -38,6 +46,40 @@ class Array2XML
     {
         $this->version = $xmlVersion;
         $this->encoding = $xmlEncoding;
+    }
+
+    /**
+     * 
+     * with XML declaration ?
+     * 
+     * @param  boolean $bool 
+     * 
+     * @return $this
+     */
+    public function withDeclaration($bool = true)
+    {
+        $this->declaration = $bool;
+
+        return $this;
+    }
+
+    /**
+     * siglon method
+     * 
+     * @param  array $data    Associative Array to be parsed into an XML Data
+     * @param  string $startEl root node of XML
+     * @return string
+     */
+    public static function createXML($data, $startEl)
+    {
+        static $arr2xml = null;
+
+        if (!$arr2xml instanceof Array2XML)
+        {
+            $arr2xml = new self();
+        }
+
+        return $arr2xml->buildXML($data, $startEl);
     }
 
     /**
@@ -60,7 +102,12 @@ class Array2XML
 
         $xml = new XmlWriter();
         $xml->openMemory();
-        $xml->startDocument($this->version, $this->encoding);
+
+        if ($this->declaration)
+        {
+            $xml->startDocument($this->version, $this->encoding);
+        }
+
         $xml->startElement($startElement);
 
         $this->writeEl($xml, $data);
@@ -76,7 +123,7 @@ class Array2XML
      * @param  array $array Associative Array that keys is somelike 'A_B_C_D'
      * @return array
      */
-    public function mapArrayData($array)
+    public static function mapArrayData($array)
     {
         $map = array();
 
@@ -87,7 +134,10 @@ class Array2XML
 
             foreach (explode('_', $key) as $v)
             {
-                if (!isset($ref[$v])) $ref[$v] = '';
+                if (!isset($ref[$v]))
+                {
+                    $ref[$v] = '';
+                }
                 // Save the current reference
                 $ref = & $ref[$v];
             }
@@ -113,24 +163,33 @@ class Array2XML
         {
             $nonAttributes = array();
 
+            if (in_array('%', array_keys($data)))
+            {
+                // bug, make sure the attributes first
+                krsort($data);
+            }
+
             foreach ($data as $key => $val) 
             {
                 //handle an attribute with elements
                 if($key[0] == '@')
                 {
                     $xml->writeAttribute(substr($key, 1), $val);
-                } else if($key[0] == '%')
+                }
+                else if($key[0] == '%')
                 {
                     if(is_array($val))
                         $nonAttributes = $val;
                     else
                         $xml->text($val);
-                } else if($key[0] == '#')
+                }
+                else if($key[0] == '#')
                 {
                     if(is_array($val))
                     {
                         $nonAttributes = $val;
-                    } else
+                    }
+                    else
                     {
                         $xml->startElement(substr($key, 1));
                         $xml->writeCData($val);
@@ -172,13 +231,15 @@ class Array2XML
                         $this->writeEl($xml, $itemValue);
 
                         $xml->endElement();
-                    } else
+                    }
+                    else
                     {
                         $itemValue = $this->writeAttr($xml, $itemValue);
                         $xml->writeElement($key, "$itemValue");
                     }
                 }
-            } else if(is_array($value))
+            }
+            else if(is_array($value))
             {
                 //associative array
                 $xml->startElement($key);
@@ -187,7 +248,8 @@ class Array2XML
                 $this->writeEl($xml, $value);
 
                 $xml->endElement();
-            } else //scalar
+            }
+            else //scalar
             {
                 $value = $this->writeAttr($xml, $value);
                 $xml->writeElement($key, "$value");

@@ -107,6 +107,14 @@ class Test
 
         $rs = Http::getHttp()->post(array('fd'=>1, 'time'=>time()))->submit("http://www.baidu.com");
 
+        //download test
+        for ($i = 1; $i <= 33; $i++) {
+            $url  = 'http://tb2.bdstatic.com/tb/editor/images/face/i_f'.str_pad($i, 2, '0', STR_PAD_LEFT).'.png';
+            $path = 'D:/vm/www/image/'. str_pad($i, 2, '0', STR_PAD_LEFT).'.png';
+
+            Http::getHttp()->download($url)->save($path);
+        }
+
         print_r($rs);
     }
 
@@ -212,8 +220,10 @@ class Test
             ),
         );
 
-        $arr2xml = new Array2XML();
-        echo $arr2xml->buildXml($input, 'data'), "\r\n";
+        // $arr2xml = new Array2XML();
+        // echo $arr2xml->buildXml($input, 'data'), "\r\n";
+
+        echo Array2XML::createXML($input, 'data'), "\r\n";
 
         $foo = array(
           'Lighting_ProductType_LightsAndFixtures_BaseDiameter_@unitOfMeasure' => 'MM',
@@ -224,10 +234,10 @@ class Test
           'A_B_C_D_E_F' => 'hee!',
         );
 
-        print_r($arr2xml->mapArrayData($foo));
+        print_r(Array2XML::mapArrayData($foo));
     }
 }
 
 // Test::emailtest('714480119@qq.com', 'test', 'hello world!');
-// Test::httptest();
-Test::arr2xmltest();
+Test::httptest();
+// Test::arr2xmltest();
