@@ -163,7 +163,7 @@ class Array2XML
         {
             $nonAttributes = array();
 
-            if (in_array('%', array_keys($data)))
+            if (array_key_exists('%', $data))
             {
                 // bug, make sure the attributes first
                 krsort($data);
@@ -183,20 +183,6 @@ class Array2XML
                     else
                         $xml->text($val);
                 }
-                else if($key[0] == '#')
-                {
-                    if(is_array($val))
-                    {
-                        $nonAttributes = $val;
-                    }
-                    else
-                    {
-                        $xml->startElement(substr($key, 1));
-                        $xml->writeCData($val);
-                        $xml->endElement();
-                    }
-                }
-
                 //ignore normal elements
                 else $nonAttributes[$key] = $val;
             }
@@ -251,8 +237,16 @@ class Array2XML
             }
             else //scalar
             {
-                $value = $this->writeAttr($xml, $value);
-                $xml->writeElement($key, "$value");
+                if ($key[0] == '#')
+                {
+                    $xml->startElement(substr($key, 1));
+                    $xml->writeCData($value);
+                    $xml->endElement();
+                }
+                else
+                {
+                    $xml->writeElement($key, "$value");
+                }
             }
         }
     }

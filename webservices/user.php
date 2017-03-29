@@ -153,14 +153,16 @@ class User
     {
         static $usr = null;
 
-        if (! $usr instanceof User) {
+        if (! $usr instanceof User)
+        {
             $usr  = new self();
         }
 
         $func = substr($func, 1);
 
-        if (!method_exists($usr, $func)) {
-            throw new \Exception("Error calling static method: $func", 1);
+        if (!method_exists($usr, $func))
+        {
+            throw new \Exception("Error calling unexists static method: $func", 1);
         }
 
         return call_user_func_array(array($usr, $func), $arguments);

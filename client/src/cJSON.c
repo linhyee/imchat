@@ -32,7 +32,14 @@
 #include <ctype.h>
 #include "cJSON.h"
 
-static const char *ep;
+//添加线程安全支持, gcc下有效
+#ifdef __GNUC__
+#define __Thread __thread
+#else
+#define __Thread
+#endif
+
+static __Thread const char *ep;
 
 const char *cJSON_GetErrorPtr(void) {return ep;}
 
