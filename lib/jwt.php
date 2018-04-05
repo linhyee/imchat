@@ -1,9 +1,9 @@
 <?php
-namespace webservices;
+namespace lib;
 
 /**
  * 
- * @package  webservices.jwt
+ * @package  lib.jwt
  * @author  mrlin <714480119@qq.com>
  */
 
@@ -19,12 +19,12 @@ class Jwt
      * @return string          A JWT
      * 
      */
-	public static function encode($payload, $key)
-	{
-		$hd = array(
-			'typ' => 'JWT',
-			'alg' => 'HS256',
-		);
+    public static function encode($payload, $key)
+    {
+        $hd = array(
+            'typ' => 'JWT',
+            'alg' => 'HS256',
+        );
 
         $sg = array(
             self::b64encode(json_encode($hd)),
@@ -35,7 +35,7 @@ class Jwt
         $sg[] = self::b64encode($sign);
 
         return implode('.', $sg);
-	}
+    }
 
 // ------------------------------------------------------------------------
     /**

@@ -1,9 +1,9 @@
 <?php 
-namespace webservices;
+namespace lib;
 
 /**
  * 
- * @package  webservices.controller
+ * @package  lib.controller
  * @author  mrlin <714480119@qq.com>
  */
 class Controller

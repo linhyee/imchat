@@ -1,9 +1,9 @@
 <?php 
-namespace webservices;
+namespace lib;
 
 /**
  * 
- * @package  webservices.thread
+ * @package  lib.thread
  * @author  mrlin <714480119@qq.com>
  */
 

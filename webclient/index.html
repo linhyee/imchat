@@ -15,67 +15,45 @@
 				<div id="box1">
 					<div>
 						<ul>
-							<li><img src="./assets/images/f1/f_4.jpg"/><span>Adny Logy&lt;714480119@qq.com&gt;</span></li>
-							<li><img src="./assets/images/f1/f_2.jpg"/><span>Lary Fate@msn.com</span></li>
-							<li><img src="./assets/images/f1/f_6.jpg"/><span>xcasdf</span></li>
-							<li><img src="./assets/images/f1/f_5.jpg"/><span>ABC, hello world!</span></li>
 						</ul>
 					</div>
 				</div>
 
 				<div id="box2">
 					<div id="row-1">
-						<p>
-							<span>Adny Logy:</span>
-							<span>你好!</span>
-						</p>
-
-						<p>
-							<span>Lary Fate:</span>
-							<span>he base XSD is used by all other data feeds to specify universally-used elements and data types. The primary purposes are to provide consistency among all the data feeds and to constrain future changes to the XSD definitions. All other XSDs reference the base-XSD's elements and data types.!</span>
-						</p>
-
-						<p>
-							<span>xcasdf:</span>
-							<span>你好!</span>
-						</p>
-
-						<p>
-							<span>Sample:</span>
-							<span>你好!</span>
-						</p>
-
 					</div>
 					
 					<div id="row-2">
-						<div id="inputbox" style="display: block;">
+						<div id="inputbox" style="display: none;">
 							<div class="input-area">
 								<ul class="tool-bar clearfix">
 									<li>
 										<i class="emo" title="表情"><img src="./assets/images/happy_face.png"/></i>
 										<div id="faceDiv"></div>
 									</li>
+									<!--
 									<li>
 										<i class="attachment" onclick="upload()" title="图片"><img src="./assets/images/photos.png"></i>
 									</li>
+									-->
 									<li class="user-guide">
 										<span>Ctrl+Enter 发送 , Enter 换行</span>
 									</li>
 								</ul>
 
 								<div class="msg-box">
-									<textarea onkeydown="chat.keySend(event);" id="chattext"></textarea>
+									<textarea id="txt"></textarea>
 								</div>
 
 							</div>
 
 							<div class="action-area">
-								<a href="javascript:;" class="btn wxbtn" onclick="chat.sendMessage()">发送</a>
+								<a href="javascript:;" class="btn wxbtn" onclick="app.message()">发送</a>
 							</div>
 						</div>
 
-						<div id="loginbox" class="area" style="width:100%;text-align:center;display:none;">
-							<form action="javascript:void(0)" onsubmit="return webctl.doLogin('','');">
+						<div id="loginbox" class="area" style="width:100%;text-align:center;display:block;">
+							<form action="javascript:void(0)" onsubmit="return app.login(this);">
 								<div class="clearfix" style="margin-top:35px">
 									<input type="text" name="name" id="name" class="fm-input" placeholder="请输入昵称"/>
 									<input type="text" name="email" id="email" class="fm-input" placeholder="请输入Email"/>
@@ -92,5 +70,6 @@
 </body>
 </html>
 
+<script src="./assets/js/jquery.min.js"></script>
 <script src="./assets/js/config.js"></script>
 <script src="./assets/js/ichat.js"></script>

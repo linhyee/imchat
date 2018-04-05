@@ -1,16 +1,16 @@
 <?php
-namespace webservices;
+namespace lib;
 
 include 'db.php';
 include 'user.php';
 include 'config.php';
 include 'controller.php';
 
-use webservices\Controller;
+use lib\Controller;
 
 /**
  * 
- * @package  webservices.api
+ * @package  lib.api
  * @author  mrlin <714480119@qq.com>
  */
 class Api

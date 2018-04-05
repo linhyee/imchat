@@ -1,9 +1,9 @@
 <?php 
-namespace webservices;
+namespace lib;
 
 /**
  * 
- * @package  webservices.config
+ * @package  lib.config
  * @author  mrlin <714480119@qq.com>
  */
 class Config

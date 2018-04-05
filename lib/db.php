@@ -3,7 +3,7 @@ namespace webservices;
 
 /**
  *
- * @package  webservices.db
+ * @package  lib.db
  * @author  mrlin <714480119@qq.com>
  */
 class Db

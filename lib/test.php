@@ -1,5 +1,5 @@
 <?php 
-namespace webservices;
+namespace lib;
 
 include 'db.php';
 include 'user.php';
@@ -13,7 +13,7 @@ include 'array2xml.php';
 
 /**
  * 
- * @package webservices.test
+ * @package lib.test
  * @author mrline <714480119@qq.com>
  */
 class Test

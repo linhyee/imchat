@@ -1,5 +1,5 @@
 <?php
-namespace webservices;
+namespace lib;
 
 use XmlWriter;
 
@@ -7,7 +7,7 @@ use XmlWriter;
  * 
  * Based on: http://stackoverflow.com/questions/99350/passing-php-associative-arrays-to-and-from-xml
  * 
- * @package webservices.array2xml
+ * @package lib.array2xml
  * @author mrlin <714480119@qq.com>
  * 
  */

@@ -1,9 +1,9 @@
 <?php 
-namespace webservices;
+namespace lib;
 
 /**
  * 
- * @package  webservices.User
+ * @package  lib.User
  * @author  mrlin <714480119@qq.com>
  */
 class User

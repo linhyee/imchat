@@ -17,8 +17,7 @@ html,body {
 var socket;
 
 function init() {
-	var host = "ws://192.168.66.10:9513/chat";
-
+	var host = "ws://127.0.0.1:8888/echo";
 	try {
 		socket = new WebSocket(host);
 		log('WebSocket - status '+socket.readyState);
@@ -30,7 +29,6 @@ function init() {
 	catch(ex){ 
 		log(ex); 
 	}
-
 	$("msg").focus();
 }
 
@@ -38,15 +36,12 @@ function send(){
 	var txt,msg;
 	txt = $("msg");
 	msg = txt.value;
-
 	if(!msg) { 
 		alert("Message can not be empty"); 
 		return; 
 	}
-
 	txt.value="";
 	txt.focus();
-
 	try { 
 		socket.send(msg); 
 		log('Sent: '+msg); 
@@ -54,7 +49,6 @@ function send(){
 		log(ex); 
 	}
 }
-
 function quit(){
 	if (socket != null) {
 		log("Goodbye!");
@@ -72,14 +66,13 @@ function reconnect() {
 function $(id){ return document.getElementById(id); }
 function log(msg){ $("log").innerHTML+="<br>"+msg; }
 function onkey(event){ if(event.keyCode==13){ send(); } }
-
 </script>
 
 </head>
 <body onload="init()">
 <h3>WebSocket v2.00</h3>
 <div id="log"></div>
-<input id="msg" type="textbox" onkeypress="onkey(event)" value="hello, world"/>
+<input id="msg" type="textbox" onkeypress="onkey(event)"/>
 <button onclick="send()">Send</button>
 <button onclick="quit()">Quit</button>
 <button onclick="reconnect()">Reconnect</button>
