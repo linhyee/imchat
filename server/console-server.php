@@ -8,7 +8,7 @@ namespace server;
  * @author mrlin <714480119@qq.com>
  */
 
-class ConsoleServer {
+class Server {
 	protected $serv = null;
 	protected $addr = '0.0.0.0';
 	protected $port = 9512;

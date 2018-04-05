@@ -600,14 +600,14 @@ abstract class wsserver implements iprotocol {
         $data = self::read($packet, $offset, 2);
       } else {
         // 127: Payload is a 64-bit unsigned int
-        $data = $this->read($packet, $offset, 8);
+        $data = self::read($packet, $offset, 8);
       }
       $payload_length = bindec(self::sprint_b($data));
     }
 
     // Get masking key
     if ($mask) {
-      $masking_key = $this->read($packet, $offset, 4);
+      $masking_key = self::read($packet, $offset, 4);
     }
 
     // Get real frame size we expected
@@ -615,7 +615,7 @@ abstract class wsserver implements iprotocol {
 
     if ($payload_length > 0) {
       // Get raw payload
-      $data = $this->read($packet, $offset, $payload_length);
+      $data = self::read($packet, $offset, $payload_length);
       $strlen = extension_loaded('mbstring') ? 'mb_strlen' : 'strlen';
 
       if ($payload_length > $strlen($conn->huge_payload.$data)) {
