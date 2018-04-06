@@ -1,6 +1,8 @@
 <?php 
 namespace server;
 
+use Exception;
+
 class server {
   private $sock;
   private $status = false; // not running 
@@ -832,5 +834,5 @@ class chatroom extends wsserver {
 }
 
 $srv = new server();
-$srv->register(new chatroom($srv, 'usrconn'));
+$srv->register(new chatroom($srv, '\\server\\usrconn')); //wtf, namespace!!!
 $srv->start();
