@@ -207,3 +207,33 @@ pre {
     height: 0; 
 } 
 .clearfix{*zoom:1;}
+
+/* Emotion plugin */
+
+#faceDiv {
+    width: 500px;
+    height: 120px;
+    position: absolute;
+    background-color: #fff;
+    -moz-border-radius: 5px 5px 0 0;
+    -webkit-border-radius: 5px 5px 0 0;
+    border-radius: 5px 5px 0 0;
+    margin-top:-150px;
+}
+#faceDiv>img {
+    border: 1px solid #ccc;
+    float: left;
+    margin-left: -1px;
+    margin-top: -1px;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    padding: 3px 3px 3px 3px;
+    cursor: pointer;
+}
+#faceDiv>img:hover {
+    background-color: #efefef;
+}
+#faceDiv>img:active {
+    padding: 4px 3px 2px 3px;
+}

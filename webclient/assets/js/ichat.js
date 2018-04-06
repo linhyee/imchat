@@ -40,8 +40,8 @@ var chat = {
 				app.updateRoster(data.roster);
 				break;
 			case 'msg':
-				var msg = data.from+': '+data.data;
-				app.printMsg(msg);
+				var _msg = data.from+': '+data.data;
+				app.printMsg(_msg);
 				break;
 			}
 		} catch(ex) {
@@ -67,6 +67,7 @@ var app = {
 	init : function() {
 		this.off();
 		this.copyright();
+		$('.emo').emotion();
 	},
 	run : function() {
 		this.init();
