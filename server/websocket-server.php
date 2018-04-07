@@ -357,6 +357,10 @@ abstract class wsserver implements iprotocol {
     $this->server = $server;
     $this->bufsize = $bufsize;
     $this->WsConnClass = $connclass;
+
+    if (method_exists($this, 'init')) {
+      $this->init();
+    }
   }
 
   function connect($sock, $data) {
@@ -683,6 +687,10 @@ abstract class wsserver implements iprotocol {
     }
     return $s;
   }
+
+  static function escape($str) {
+    return htmlentities($str, ENT_NOQUOTES);
+  }
 }
 
 class wsechonic extends wsserver {
@@ -705,6 +713,14 @@ class usrconn extends wscon {
 }
 
 class chatroom extends wsserver {
+  public $db = null;
+
+  function init() {
+    require '../lib/db.php';
+    $db = new \lib\Db(array('db_type' => 'sqlite','sqlite_path' => dirname(getcwd()).'/data/ichat.db' ));
+    $this->db = $db;
+  }
+
   function connecting($sock) {}
 
   function message($sock, $data) {
@@ -764,11 +780,11 @@ class chatroom extends wsserver {
     $msg = array(
       'type' => 'presence',
       'roster' => array(),
-      'history_msg' => array(),
       'session' => array(
         'islogin' => false,
         'name' => $username,
         'email' => $email,
+        'history_msg' => array(),
       ),
     );
 
@@ -795,6 +811,9 @@ class chatroom extends wsserver {
         );
       }
     }
+
+    // Get history msg
+    $msg['session']['history_msg'] = $this->getmsg();
     $msg['session']['islogin'] = true;
     $msg['session']['icon'] = $conn->icon;
 
@@ -805,9 +824,14 @@ class chatroom extends wsserver {
   function domessage($conn, $data) {
     $msg = array(
       'type' => 'msg',
-      'data' => $data['data'],
+      'data' => nl2br(self::escape($data['data'])),
     );
     $this->broadcast($conn, $msg);
+    $this->savemsg(array(
+      'from' => $conn->username,
+      'msg' => $data['data'],
+      'image' => NULL,
+    ));
   }
 
   function broadcast($conn, array $msg) {
@@ -830,6 +854,30 @@ class chatroom extends wsserver {
         $this->wrap_packet(json_encode($data), $client);
       }
     }
+  }
+
+  function savemsg(array $msg) {
+    return $this->db->insert('msg', array(
+      'id' => NULL,
+      'from' => $msg['from'],
+      'msg' => $msg['msg'],
+      'image' => $msg['image'],
+      'create_time' => time(),
+    ));
+  }
+
+  function getmsg($limit = 20) {
+    $pdostmt = $this->db->select('msg')->orderBy('create_time', 'asc')->limit(20)->query();
+    $rs = $pdostmt->fetchAll(\PDO::FETCH_ASSOC);
+    $msg = array();
+    foreach ($rs as $val) {
+      $msg[] = array(
+        'from' => $val['from'],
+        'msg' => nl2br(self::escape($val['msg'])),
+        'image' => $val['image'],
+      );
+    }
+    return $msg;
   }
 }
 

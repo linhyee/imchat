@@ -16,6 +16,7 @@ var chat = {
 			log(ex);
 		}
 	},
+
 	onopen: function(msg) {
 		if (this.readyState == 1) {
 			app.printMsg('Connected server successfully!');
@@ -23,6 +24,7 @@ var chat = {
 		}
 		log("Welcome - status " + this.readyState);
 	},
+
 	onmessage: function(msg) {
 		try {
 			var data = JSON.parse(msg.data);
@@ -33,6 +35,11 @@ var chat = {
 						app.showInputBox();
 						app.name = data.session.name;
 						app.email = data.session.email;
+
+						$.each(data.session.history_msg, function(i, v){
+							var _msg = v.from+': '+v.msg;
+							app.printMsg($.parseEmotion(_msg));
+						});
 					} else {
 						alert("Login Error! Bad email format or Name less than 2 characers!!!")
 					}
@@ -41,7 +48,7 @@ var chat = {
 				break;
 			case 'msg':
 				var _msg = data.from+': '+data.data;
-				app.printMsg(_msg);
+				app.printMsg($.parseEmotion(_msg));
 				break;
 			}
 		} catch(ex) {
@@ -49,6 +56,7 @@ var chat = {
 		}
 		log("Received: " + msg.data);
 	},
+
 	onclose: function(msg) {
 		app.printMsg("Googbye!")
 		app.handshake = false;
@@ -56,6 +64,7 @@ var chat = {
 		app.email = '';
 		log("Welcome - status " + this.readyState);
 	},
+
 	onerror : function(msg) {}
 };
 
@@ -69,10 +78,12 @@ var app = {
 		this.copyright();
 		$('.emo').emotion();
 	},
+
 	run : function() {
 		this.init();
 		chat.ws();
 	},
+
 	message: function() {
 		var txt,msg;
 		txt = $("#txt");
@@ -97,22 +108,25 @@ var app = {
 			log(ex);
 		}
 	},
+
 	updateRoster : function(roster) {
 		var userlist = '';
 		$(roster).each(function(i, data){
-			userlist += '<li uid="'+data.name+'">' + 
-						'<img src="./assets/images/f1/f_'+data.icon+'.jpg"/>'+
-						'<span>'+data.name+'&lt;'+data.email+'&gt;</span>'+
-					'</li>'
+			userlist += '<li uid="'+data.name+'">' +
+				'<img src="./assets/images/f1/f_'+data.icon+'.jpg"/>'+
+				'<span>'+data.name+'&lt;'+data.email+'&gt;</span>'+
+				'</li>'
 		});
 		if (userlist) {
 			$('#box1 ul').html(userlist);
 		}
 	},
+
 	showInputBox : function() {
 		$('#loginbox').remove();
 		$('#inputbox').show();
 	},
+
 	login: function(obj) {
 		if (!app.handshake) {
 			return;
@@ -137,6 +151,7 @@ var app = {
 			log(ex);
 		}
 	},
+
 	off : function() {
 		$('#txt').keydown(function(e) {
 			if (e.ctrlKey && (e.keyCode == 13 || e.keyCode == 10)) {
@@ -144,16 +159,37 @@ var app = {
 			}
 		});
 	},
+
 	printMsg : function(msg) {
+		var isBottom = app.msgPanelIsBottom();
 		$('#row-1').append('<p>'+msg+'</p>');
+
+		if (isBottom) {
+			app.msgPanelSetBottom();
+		}
 	},
+
+	msgPanelIsBottom : function() {
+		var msgPanel = document.getElementById('row-1');
+		return msgPanel.scrollHeight - msgPanel.scrollTop == msgPanel.clientHeight;
+	},
+
+	msgPanelSetBottom : function() {
+		var msgPanel = document.getElementById('row-1');
+		msgPanel.scrollTop = msgPanel.scrollHeight;
+	},
+
 	copyright : function() {
 		console.log("您好！请多多指教(714480119@qq.com).");
 	}
 };
+
+function log(msg) {
+	console.log(msg);
+}
+
 function rnd(n, m){
 	var random = Math.floor(Math.random()*(m-n+1)+n);
 	return random;
 }
-function log(msg) { console.log(msg);}
 app.run();

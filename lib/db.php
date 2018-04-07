@@ -1,5 +1,5 @@
 <?php
-namespace webservices;
+namespace lib;
 
 /**
  *
@@ -282,10 +282,8 @@ class Db
             throw new \Exception("No values input", 1);
         }
 
-        $keys = implode(',', array_keys($values));
-        $vals = implode(',', array_map( function($item) { return ":$item"; },
-            array_keys($values)
-        ));
+        $keys = implode(',', array_map( function($item){ return '`'.$item.'`'; }, array_keys($values)));
+        $vals = implode(',', array_map( function($item) { return ":$item"; }, array_keys($values)));
 
         $sql = sprintf("INSERT INTO $table (%s) VALUES(%s)", $keys, $vals);
 
