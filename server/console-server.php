@@ -9,97 +9,146 @@ namespace server;
  */
 
 class Server {
-	protected $serv = null;
-	protected $addr = '0.0.0.0';
-	protected $port = 9512;
-	protected $connections = array();
-	protected $config = array(
-		'worker_num' => 4,
-		'daemonize' => false,
-		'task_worker_num' => 4
-	);
+  private $serv;
+  private $addr = '0.0.0.0';
+  private $port = 8888;
+  private $conns = array();
+  
+  private $config = array(
+    'worker_num' => 4,
+    'daemonize' => false,
+    'task_worker_num' => 4
+  );
 
-	public function __construct(array $config = array()) {
-		if (count($config) > 0) {
-			$this->initialize($config);
-		}
+  function __construct(array $config = array()) {
+    if (count($config) > 0) {
+      $this->init($config);
+    }
 
-		$this->serv = new \Swoole\Server($this->addr, $this->port);
-		$this->serv->set($this->config);
+    $this->serv = new \Swoole\Server($this->addr, $this->port);
+    $this->serv->set($this->config);
 
-		$this->serv->on('connect', array($this, 'onConnect'));
-		$this->serv->on('receive', array($this, 'onReceive'));
-		$this->serv->on('close', array($this, 'onClose'));
-		$this->serv->on('task', array($this, 'onTask'));
-		$this->serv->on('finish', array($this, 'onFinish'));
-		$this->serv->start();
-	}
+    $this->serv->on('connect', array($this, 'connect'));
+    $this->serv->on('receive', array($this, 'receive'));
+    $this->serv->on('close', array($this, 'close'));
+    $this->serv->on('task', array($this, 'task'));
+    $this->serv->on('finish', array($this, 'finish'));
+  }
 
-	public static function run() {
-		$serv = new self();
-	}
+  function run() {
+    $this->serv->start();
+  }
 
-	public function initialize(array $config = array()) {
-		foreach ($config as $key => $value) {
-			if (isset($this->$key)) {
-				$this->$key = $value;
-			} else {
-				$this->config[$key] = $value;
-			}
-		}
-	}
+  function init(array $config) {
+    foreach ($config as $key => $value) {
+      if (isset($this->$key)) {
+        $this->$key = $value;
+      } else {
+        $this->config[$key] = $value;
+      }
+    }
+  }
 
-	public function onConnect($serv, $fd) {
-		$this->serv->task(json_encode(array(
-			'task' => 'connect',
-			'fd' => $fd,
-		)));
-		echo "client $fd connected\n";
-	}
+  function connect($serv, $fd) {
+    $conn = new conn($fd);
+    $this->conns[$fd] = $conn;
+    log_msg("client $fd connected");
+  }
 
-	public function onReceive($serv, $fd, $fromId, $data) {
-		$data = json_decode($data, true);
-		$type = 'message';
+  function receive($serv, $fd, $fromId, $data) {
+    $data = json_decode($data, true);
+    switch ($data['type']) {
+      case 'login': // login action
+        $task = array(
+          'task' => 'login',
+          'username' => $data['username'],
+          'fd' => $fd,
+        );
+        break;
+      case 'msg': // new message
+        $task = array(
+          'task' => 'msg',
+          'msg' => $data['msg'],
+          'from' => $data['from'],
+          'to' => isset($data['to']) ? $data['to'] : '',
+          'fd' => $fd,
+        );
+        break;
+    }
+    $this->serv->task(json_encode($task));
+  }
 
-		switch (ord($data['chat'])) {
-			case 'u':
-				$data = Chat::msgpack($fd, 'u', $data);
-				break;
-			case 'a':
-				$data = Chat::msgpack($fd, 'a', $data);
-				break;
-			default:
-				break;
-		}
+  function close($serv, $fd) {
+    $data = array(
+      'task' => 'quit',
+      'fd' => $fd,
+    );
+    $this->serv->task(json_encode($data));
+    log_msg("client $fd disconnected!");
+  }
 
-		$this->serv->task(json_encode(array(
-			'task'  => $type,
-			'data'  => $data,
-			'param' => '',
-		)));
-		echo "receive data $data\n";
-	}
+  function finish($serv, $taskId, $data) {
+    log_msg("task $taskId finished!!1");
+  }
 
-	public function onClose($serv, $fd) {
-		$this->serv->task();
-		echo "client $fd disconnected\n";
-	}
+  function task($serv, $taskId, $fromId, $data) {
+    $data = json_decode($data, true);
+    switch ($data['task']) {
+      case 'login':
+        $this->dologin($data);
+        break;
+      case 'msg':
+        $this->domsg($data);
+        break;
+      case 'quit':
+        $this->doquit($data);
+        break;
+    }
+  }
 
-	public function onFinish($serv, $taskId, $data) {
-		echo 'task ' .$taskId. ' finish\n';
-	}
+  function dologin($data) {
+    if (empty($data['username'])) {
+      $this->sendmsg(array(
+        'type' => 'login',
+        'msg' => 'username empty!',
+        'islogin' => false,
+      ));
+      $this->serv->close($fd);
+      return;
+    }
+    $already_taken = fasle;
+    foreach ($this->conns as $key => $val) {
+      if ($val->username == $data['username']) {
+        $already_taken = true;
+        break;
+      }
+    }
+  }
 
-	public function onTask($serv, $taskId, $fromId, $data) {
-		$data = json_decode($data, true);
-		switch ($data['task']) {
-			case 'login':
-				Chat::doLogin($serv, $data['package']);
-				break;
-			case 'message':
-				Chat::send($serv, $data['package']);
-				break;
-			default:
-				break;
-		}
-	}
+  function doquit($data) {
+    $data = json_decode($data, true);
+    $this->conns[$data['fd']]->islogin = false;
+    unset($this->conns)
+  }
+}
+
+class conn {
+  public $id;
+  public $fd;
+  public $username;
+  public $islogin = fasle;
+
+  function __construct($fd) {
+    $this->id = uniqid('u');
+    $this->fd = $fd;
+  }
+}
+
+function log_msg() {
+  $args = func_get_args();
+
+  if (count($args) > 0) {
+    fwrite(STDOUT, date('Y/m/d H:i:s '). call_user_func_array("sprintf", $args));
+    fwrite(STDOUT, "\n");
+  }
 }
