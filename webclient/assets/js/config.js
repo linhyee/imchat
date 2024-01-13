@@ -1,4 +1,4 @@
 var config = {
-	'domain' : 'http://127.0.0.1',
-	'wsserver' : 'ws://127.0.0.1:9527/chat'
+  'domain' : 'http://124.71.216.248',
+  'wsserver' : 'ws://124.71.216.248:9527/chat'
 };

@@ -3,33 +3,36 @@ ol, ul { list-style: outside none none; }
 q::before, q::after, blockquote::before, blockquote::after { content: none; }
 td {margin:0;padding: 0;}
 html, body {
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	color: rgb(34, 34, 34);
-	font-size: 14px;
-	line-height: 1.3em;
-	font-family:"Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: rgb(34, 34, 34);
+    font-size: 14px;
+    line-height: 1.3em;
+    font-family:"Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important;
 }
 
 body {
-	box-sizing: border-box;
+    box-sizing: border-box;
+    background-image: url('../images/bg.png');
+    background-position: center;
+    background-size: cover;
 }
 input, textarea, keygen, select, button {
-	font-family:"Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important;
+    font-family:"Microsoft YaHei","微软雅黑","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif,"Apple Color Emoji" ! important;
 }
 pre {
-	white-space: pre-wrap;
+    white-space: pre-wrap;
 }
 
 #main {
-	width: 100%;
-	height: 100%;
-	padding-top: 1px;
+    width: 100%;
+    height: 100%;
+    padding-top: 1px;
 }
 
 .container {
-	position: absolute;
+    position: absolute;
     left: 50%;
     top: 50%;
     width: 1000px;
@@ -38,6 +41,7 @@ pre {
     margin-top: -301px;
     overflow: hidden;
     border: 1px dashed #ccc;
+    opacity: 80%;
 }
 
 #header {
@@ -56,8 +60,8 @@ pre {
 }
 
 #box1 {
-	float: left;
-	width: 233px; 
+    float: left;
+    width: 233px; 
     height: 100%;
     background-color: #fff;
     overflow-x: hidden;
@@ -90,9 +94,9 @@ pre {
 }
 
 #box2 {
-	position: relative;
-	float: right;
-	width: 765px;
+    position: relative;
+    float: right;
+    width: 765px;
     height: 100%;
     border-left: 1px dashed #ccc;
     background-color: #fff;
@@ -100,20 +104,20 @@ pre {
 }
 
 #box2 #row-1 {
-	width: 100%;
-	height: 465px;
-	background-color: #fff;
+    width: 100%;
+    height: 465px;
+    background-color: #fff;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
 #box2 #row-2 {
-	position: absolute;
-	bottom: 0px;
-	left: 0px;
-	width: 100%;
-	min-height: 106px;
-	border-top: 1px dashed #ccc;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    min-height: 106px;
+    border-top: 1px dashed #ccc;
 }
 
 #row-1 p {
@@ -134,7 +138,7 @@ pre {
     white-space: nowrap;
     overflow-wrap: normal;
     display: inline-block;
-	text-align: center;
+    text-align: center;
     text-decoration: none;
     font-size: 12px;
 }
@@ -153,8 +157,8 @@ pre {
 .fm-input {
     margin-right:20px;
     width:250px;
-	border: 1px solid #ccc;	
-	box-sizing: border-box;
+    border: 1px solid #ccc;	
+    box-sizing: border-box;
     color: rgb(34, 34, 34);
     font-size: 12px;
     border: 1px solid rgb(225, 225, 225);

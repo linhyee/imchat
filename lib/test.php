@@ -58,7 +58,6 @@ class Test
 
         $rs = Db::getDb()->select('parts')->query();
 
-        $rows = $rs->fetchColumn(1);
     }
 
     /**

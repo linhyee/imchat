@@ -9,138 +9,273 @@ namespace server;
  */
 
 class Server {
-  private $serv;
   private $addr = '0.0.0.0';
   private $port = 8888;
+  private $sockets = array();
   private $conns = array();
   
-  private $config = array(
-    'worker_num' => 4,
-    'daemonize' => false,
-    'task_worker_num' => 4
-  );
-
-  function __construct(array $config = array()) {
-    if (count($config) > 0) {
-      $this->init($config);
-    }
-
-    $this->serv = new \Swoole\Server($this->addr, $this->port);
-    $this->serv->set($this->config);
-
-    $this->serv->on('connect', array($this, 'connect'));
-    $this->serv->on('receive', array($this, 'receive'));
-    $this->serv->on('close', array($this, 'close'));
-    $this->serv->on('task', array($this, 'task'));
-    $this->serv->on('finish', array($this, 'finish'));
+  function __construct($address = '127.0.0.1', $port = 8000) {
+    $this->addr = $address;
+    $this->port = $port;
   }
 
   function run() {
-    $this->serv->start();
+    $this->listen();
+    while (true) {
+      $this->loop();
+    }
   }
 
-  function init(array $config) {
-    foreach ($config as $key => $value) {
-      if (isset($this->$key)) {
-        $this->$key = $value;
-      } else {
-        $this->config[$key] = $value;
+  private function listen() {
+    $socket = stream_socket_server(sprintf("tcp://%s:%d", $this->addr, $this->port),
+      $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN);
+
+    if (!$socket) {
+      trigger_error("stream_socket_server error: $errstr ($errno)", 256);
+    }
+    log_msg("server listened on %d", $this->port);
+    stream_set_blocking($socket, 0);
+    array_push($this->sockets, $socket);
+  }
+
+  private function loop() {
+    $read = $this->sockets;
+    $write = null;
+    $except = null;
+    if (stream_select($read, $write, $except, 5) > 0) {
+      foreach ($read as $sock) {
+        $this->handle_read($sock);
+      }
+    }
+    $read = null;
+    $write = $this->sockets;
+    $except = null;
+    if (stream_select($read, $write, $except, 5) > 0) {
+      foreach ($write as $sock) {
+        if ($sock !== $this->sockets[0]) { //不用处理服务端的write
+          $this->handle_write($sock);
+        }
       }
     }
   }
 
-  function connect($serv, $fd) {
-    $conn = new conn($fd);
-    $this->conns[$fd] = $conn;
-    log_msg("client $fd connected");
-  }
-
-  function receive($serv, $fd, $fromId, $data) {
-    $data = json_decode($data, true);
-    switch ($data['type']) {
-      case 'login': // login action
-        $task = array(
-          'task' => 'login',
-          'username' => $data['username'],
-          'fd' => $fd,
-        );
-        break;
-      case 'msg': // new message
-        $task = array(
-          'task' => 'msg',
-          'msg' => $data['msg'],
-          'from' => $data['from'],
-          'to' => isset($data['to']) ? $data['to'] : '',
-          'fd' => $fd,
-        );
-        break;
-    }
-    $this->serv->task(json_encode($task));
-  }
-
-  function close($serv, $fd) {
-    $data = array(
-      'task' => 'quit',
-      'fd' => $fd,
-    );
-    $this->serv->task(json_encode($data));
-    log_msg("client $fd disconnected!");
-  }
-
-  function finish($serv, $taskId, $data) {
-    log_msg("task $taskId finished!!1");
-  }
-
-  function task($serv, $taskId, $fromId, $data) {
-    $data = json_decode($data, true);
-    switch ($data['task']) {
-      case 'login':
-        $this->dologin($data);
-        break;
-      case 'msg':
-        $this->domsg($data);
-        break;
-      case 'quit':
-        $this->doquit($data);
-        break;
-    }
-  }
-
-  function dologin($data) {
-    if (empty($data['username'])) {
-      $this->sendmsg(array(
-        'type' => 'login',
-        'msg' => 'username empty!',
-        'islogin' => false,
+  private function server_accept($server_sock) {
+    if ($sock = @stream_socket_accept($server_sock, empty($this->conns) ? -1 : 0, $peer)) {
+      log_msg($peer. " connected". PHP_EOL);
+      stream_set_blocking($sock, 0);
+      array_push($this->sockets, $sock);
+      array_push($this->conns, new conn(
+        $sock,
       ));
-      $this->serv->close($fd);
+    }
+  }
+
+  private function handle_read($sock) {
+    if ($sock == $this->sockets[0]) {
+      return $this->server_accept($sock);
+    }
+    $con = $this->get_active_conn($sock);
+    if (!$con) {
+      trigger_error("can not find active connection object : ".
+        stream_socket_get_name($sock, true), 256);
+    }
+    $total_buf = '';
+    while ($buf = stream_socket_recvfrom($sock, 1024)) {
+      if ($buf !== false) {
+        $total_buf .= $buf;
+      }
+    }
+    if ($total_buf === '') { // client closed, 主动关闭
+      log_msg("recv client %s EOL", stream_socket_get_name($con->sock, true));
+      $this->do_quit($con, array(
+        'type' => conn::Quit,
+      ));
       return;
     }
-    $already_taken = fasle;
-    foreach ($this->conns as $key => $val) {
-      if ($val->username == $data['username']) {
-        $already_taken = true;
-        break;
+    //数据解包
+    $msgs = $this->split_packet($con, $total_buf);
+    if ($msgs === false) { //无效帧头
+      // 强制退出, 不用消息广播
+      log_msg("recv client %s invalid data package", stream_socket_get_name($con->sock, true));
+      $this->close($sock);
+    } else {
+      log_msg("recev msgs : %s", json_encode($msgs));
+      foreach ($msgs as $msg) {
+        array_push($con->write_msgs, $msg);
       }
     }
   }
 
-  function doquit($data) {
-    $data = json_decode($data, true);
-    $this->conns[$data['fd']]->islogin = false;
-    unset($this->conns)
+  private function close($sock) {
+    $remote = stream_socket_get_name($sock, true);
+    fclose($sock);
+    $this->remove_sock($sock);
+    $this->remove_conn($sock);
+    log_msg("client %s disconnected", $remote);
+  }
+
+  private function split_packet($conn, $buf) {
+    if ($conn->read_buf) {
+      $buf = $conn->read_buf . $buf;
+    }
+    $msg = array();
+    $buf_sz = strlen($buf) ;
+    $offset = 0;
+    while ($buf_sz >= 3) { // 封包格式: |1byte|2byte|------data-------|, 所以有至少3个字节长度buf
+      $byte = substr($buf, $offset, 1);
+      $offset += 1;
+      $id = ord($byte);
+      if ($id != 0xeb) { //检查帧头
+        return false;
+      }
+      // 载荷长度
+      $sz = unpack('n',substr($buf, $offset, 2))[1];
+      $offset += 2;
+      if ($sz > 0 && $buf_sz - $offset >= $sz) {
+        $payload = substr($buf, $offset, $sz -1); // tail with \0
+        array_push($msg, $payload);
+        $offset += $sz;
+      }
+      $buf_sz -= $offset;
+    }
+
+    if ($offset > 0) {
+      $conn->buf = substr($buf, $offset);
+    }
+    return $msg;
+  }
+
+  private function handle_write($sock) {
+    $con = $this->get_active_conn($sock);
+    if (!$con) {
+      trigger_error("can not get active connection object: ".
+        stream_socket_get_name($sock, true), 256);
+    }
+    while ($msg_buf = array_shift($con->write_msgs)) {
+      $msg = json_decode($msg_buf, true);
+      switch ($msg['type'] ?? -1) { //判断消息类型
+        case conn::Login:
+          $this->do_handshake($con, $msg);
+          break;
+        case conn::Message:
+          $this->do_message($con, $msg);
+          break;
+        case conn::Quit:
+          $this->do_quit($con, $msg);
+          break;
+      }
+    }
+  }
+
+  private function do_handshake($conn, $msg ) {
+    $send_msg = array(
+      'data' => 'ok',
+      'type' => conn::Login,
+    );
+    log_msg("recv handshaked msg: %s", json_encode($msg));
+    if ($msg['data'] != 'syn') { //握手失败
+      $this->close($conn->sock);
+      return;
+    }
+    $conn->islogin = true;
+    $conn->username = $msg['from'] ?? 'someone';
+    if ( $res = stream_socket_sendto($conn->sock, $this->wrap_packet($send_msg))) {
+      log_msg("send handshaked msg: %s", json_encode($send_msg));
+      //广播消息
+      foreach ($this->conns as $client_conn) {
+        if ($client_conn->sock!== $conn->sock) {
+          stream_socket_sendto($client_conn->sock, $this->wrap_packet(array(
+            'data' => sprintf("welcome, %s !",$msg['from'] ?? 'someone'),
+            'from' => 'system message',
+            'type' => conn::Present,
+          )));
+        }
+      }
+    } else {
+      log_msg("stream_socket_sendto: ret=%d", $res);
+    }
+  }
+
+  private function do_quit($conn, $msg) {
+    $conn->islogin = false;
+    $this->close($conn->sock);
+    //brocast
+    foreach ($this->conns as $client_conn) {
+      if ($client_conn->sock !== $conn->sock) {
+        stream_socket_sendto($client_conn->sock, $this->wrap_packet(array(
+          'data' => sprintf("%s leaved !", $conn->username),
+          'from' => 'system message',
+          'type' => conn::Present,
+        )));
+      }
+    }
+  }
+
+  private function do_message($conn, $msg) {
+    foreach ($this->conns as $client_conn) {
+      if ($client_conn->sock !== $conn->sock) {
+        stream_socket_sendto($client_conn->sock, $this->wrap_packet(array(
+          'data' => $msg['data'],
+          'from' => $msg['from'],
+          'type' => conn::Message,
+        )));
+      }
+    }
+  }
+
+  private function wrap_packet(array $msg) {
+    $payload = json_encode($msg)  . "\0"; // c string end with '\0';
+    $len = strlen($payload);
+    $pack_msg =  pack('Cn', 0xeb, $len);
+    return $pack_msg.$payload;
+  }
+
+  private function get_active_conn($sock) {
+    foreach ($this->conns as $con) {
+      if ($con->sock === $sock) {
+        return $con;
+      }
+    }
+    return false;
+  }
+
+  private function remove_conn($sock) {
+    $conns = array();
+    foreach ($this->conns as $con) {
+      if ($con->sock !== $sock) {
+        array_push($conns, $con);
+      }
+    }
+    $this->conns = $conns;
+  }
+
+  private function remove_sock ($sock) {
+    $sockets = array();
+    foreach ($this->sockets as $so) {
+      if ($so !== $sock) {
+        array_push($sockets, $so);
+      }
+    }
+    $this->sockets = $sockets;
   }
 }
 
 class conn {
-  public $id;
-  public $fd;
-  public $username;
-  public $islogin = fasle;
+  const Login = 0;
+  const Message = 1;
+  const Present = 2;
+  const Quit = 3;
 
-  function __construct($fd) {
+  public $id;
+  public $sock;
+  public $username;
+  public $islogin = false;
+  public $read_buf = '';
+  public $write_msgs = array(); 
+
+  function __construct($sock) {
     $this->id = uniqid('u');
-    $this->fd = $fd;
+    $this->sock = $sock;
   }
 }
 
@@ -152,3 +287,6 @@ function log_msg() {
     fwrite(STDOUT, "\n");
   }
 }
+
+$srv = new Server();
+$srv->run();

@@ -55,7 +55,7 @@ class User
     {
         $users = Db::getDb()->select($this->table)->where('username', $name)->limit(1)->query();
 
-        return $users->fetch(\PDO::FETCH_ASSOC);
+        return $users;
     }
 
 // ------------------------------------------------------------------------
@@ -72,7 +72,7 @@ class User
     {
         $users = Db::getDb()->select($this->table)->where('fd', $fd)->limit(1)->query();
 
-        return $users->fetch(\PDO::FETCH_ASSOC);
+        return $users;
     }
 
 // ------------------------------------------------------------------------
@@ -116,7 +116,7 @@ class User
     {
         $rs = Db::getDb()->select($this->table)->where('username', $search)->orClause('fd', $search)->limit(1)->query();
         
-        return !!$rs->fetchAll(\PDO::FETCH_ASSOC);
+        return !!$rs;
     }
 
 // ------------------------------------------------------------------------

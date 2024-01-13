@@ -41,7 +41,7 @@ var chat = {
               app.printMsg($.parseEmotion(_msg));
             });
           } else {
-            alert("Login Error! Bad email format or Name less than 2 characers!!!")
+            alert("登录失败! 错误邮箱格式或昵称不满足2个字符以上")
           }
         }
         app.updateRoster(data.roster);
@@ -89,15 +89,15 @@ var app = {
     txt = $("#txt");
     msg = txt.val();
     if (!msg) {
-      alert("Message can not be empty!!!");
+      alert("发送消息为空!");
       return;
     }
     if (chat.wSock.readyState == 3) {
-      alert("Connection lost!!!")
+      alert("连接丢失!")
       return;
     }
     if (!app.name) {
-      alert("No login!!!")
+      alert("未登录状态!")
       return;
     }
     txt.val('');
@@ -129,6 +129,8 @@ var app = {
 
   login: function(obj) {
     if (!app.handshake) {
+      alert('服务不可用!')
+      log("handshake fail, please check the server whether availabel!");
       return;
     }
     var name = $(obj).find('input[name=name]').val();
@@ -136,11 +138,11 @@ var app = {
 
     var emailPatten = new RegExp('^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$');
     if (emailPatten.test(email) == false) {
-      alert('Bad email format!');
+      alert('邮箱格式错误!');
       return;
     }
     if (name.trim().length < 2) {
-      alert("The length of name is less than 2");
+      alert("昵称至少大于两个字符!");
       return;
     }
 

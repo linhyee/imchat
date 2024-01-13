@@ -36,21 +36,21 @@ extern "C"
 #define cJSON_String 4
 #define cJSON_Array 5
 #define cJSON_Object 6
-	
+  
 #define cJSON_IsReference 256
 
 /* The cJSON structure: */
 typedef struct cJSON {
-	struct cJSON *next,*prev;	/* next/prev allow you to walk array/object chains. Alternatively, use GetArraySize/GetArrayItem/GetObjectItem */
-	struct cJSON *child;		/* An array or object item will have a child pointer pointing to a chain of the items in the array/object. */
+  struct cJSON *next,*prev;	/* next/prev allow you to walk array/object chains. Alternatively, use GetArraySize/GetArrayItem/GetObjectItem */
+  struct cJSON *child;		/* An array or object item will have a child pointer pointing to a chain of the items in the array/object. */
 
-	int type;					/* The type of the item, as above. */
+  int type;					/* The type of the item, as above. */
 
-	char *valuestring;			/* The item's string, if type==cJSON_String */
-	int valueint;				/* The item's number, if type==cJSON_Number */
-	double valuedouble;			/* The item's number, if type==cJSON_Number */
+  char *valuestring;			/* The item's string, if type==cJSON_String */
+  int valueint;				/* The item's number, if type==cJSON_Number */
+  double valuedouble;			/* The item's number, if type==cJSON_Number */
 
-	char *string;				/* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
+  char *string;				/* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
 } cJSON;
 
 typedef struct cJSON_Hooks {
@@ -63,7 +63,7 @@ extern void cJSON_InitHooks(cJSON_Hooks* hooks);
 
 
 /* Supply a block of JSON, and this returns a cJSON object you can interrogate. Call cJSON_Delete when finished. */
-extern cJSON *cJSON_Parse(const char *value);
+extern cJSON *cJSON_Parse(const char *value, const char **ep);
 /* Render a cJSON entity to text for transfer/storage. Free the char* when finished. */
 extern char  *cJSON_Print(cJSON *item);
 /* Render a cJSON entity to text for transfer/storage without any formatting. Free the char* when finished. */
@@ -78,9 +78,6 @@ extern cJSON *cJSON_GetArrayItem(cJSON *array,int item);
 /* Get item "string" from object. Case insensitive. */
 extern cJSON *cJSON_GetObjectItem(cJSON *object,const char *string);
 
-/* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when cJSON_Parse() returns 0. 0 when cJSON_Parse() succeeds. */
-extern const char *cJSON_GetErrorPtr(void);
-	
 /* These calls create a cJSON item of the appropriate type. */
 extern cJSON *cJSON_CreateNull(void);
 extern cJSON *cJSON_CreateTrue(void);
@@ -109,7 +106,7 @@ extern cJSON *cJSON_DetachItemFromArray(cJSON *array,int which);
 extern void   cJSON_DeleteItemFromArray(cJSON *array,int which);
 extern cJSON *cJSON_DetachItemFromObject(cJSON *object,const char *string);
 extern void   cJSON_DeleteItemFromObject(cJSON *object,const char *string);
-	
+  
 /* Update array items. */
 extern void cJSON_ReplaceItemInArray(cJSON *array,int which,cJSON *newitem);
 extern void cJSON_ReplaceItemInObject(cJSON *object,const char *string,cJSON *newitem);
@@ -121,7 +118,7 @@ need to be released. With recurse!=0, it will duplicate any children connected t
 The item->next and ->prev pointers are always zero on return from Duplicate. */
 
 /* ParseWithOpts allows you to require (and check) that the JSON is null terminated, and to retrieve the pointer to the final byte parsed. */
-extern cJSON *cJSON_ParseWithOpts(const char *value,const char **return_parse_end,int require_null_terminated);
+extern cJSON *cJSON_ParseWithOpts(const char *value,const char **return_parse_end,int require_null_terminated, const char **ep);
 
 extern void cJSON_Minify(char *json);
 

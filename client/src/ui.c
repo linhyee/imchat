@@ -1,127 +1,70 @@
 #include "im.h"
 
-static void print_in_middle(WINDOW *win, int y, int x, int w, char *s)
-{
-	int l, _y, _x;
-	float t;
+WINDOW *top, *chat, *bot, *input;
 
-	if (win == NULL) win = stdscr;
+void wins_init() {
+  //清空之前的输出
+  clear();
+  initscr();
+  cbreak();
+  nonl();
+  refresh();
 
-	getyx(win, _y, _x);
+  int x, y, h, w;
+  getmaxyx(stdscr, h, w);
 
-	if (x != 0) _x = x;
-	if (y != 0) _y = y;
-	if (w == 0)  w = 80;
+  //message win
+  top = newwin(h-4, w, 0, 0);
+  box(top, 0, 0);
+  wrefresh(top);
 
-	l  = strlen(s);
-	t  = (w - l) / 2;
-	_x = x + (int) t;
+  chat = subwin(top, h-6, w-2, 1, 1);
+  wrefresh(chat);
 
-	mvwprintw(win, _y, _x, "%s", s);
+  //initial input win
+  getmaxyx(top, y, x);
+  bot = newwin(4, w, y, 0);
+  box(bot, 0, 0);
+  wrefresh(bot);
+
+  getbegyx(bot, y, x);
+  //坑!必新起一个win,如果win中缓冲buf含有字符(包括已输出),会影响输入
+  input = subwin(bot, 2, w-2, y+1 ,1);
+  wrefresh(input);
+
+  //use keypad on all windows
+  keypad(top, TRUE);
+  keypad(chat, TRUE);
+  keypad(bot, TRUE);
+  keypad(input, TRUE);
+  scrollok(chat, TRUE);
 }
 
-static void init_wins()
-{
-	int x, y, h, w, row = 3; //rows of promote
-
-	/* initial frame */
-	wins[0] = newwin(LINES - row, 0, 0, 0);
-	getbegyx(wins[0], y, x);
-	getmaxyx(wins[0], h, w);
-
-	box(wins[0], 0, 0);
-	mvwaddch(wins[0], 2, 0, ACS_LTEE);
-	mvwhline(wins[0], 2, 1, ACS_HLINE, w - 2);
-	mvwaddch(wins[0], 2, w - 1, ACS_RTEE);
-
-	print_in_middle(wins[0], 1, 0, w, TITLE);
-	refresh();
-
-	/* initial memsage area */
-	getmaxyx(wins[0], y, x);
-	wins[1] = newwin(y - 4, x - 2, 3, 1);
-	refresh();
-
-	/* initial promote*/
-	wins[2] = newwin(row, 0, y, 0);
-	refresh();
+void wins_destroy() {
+  delwin(top);
+  delwin(chat);
+  delwin(bot);
+  delwin(input);
+  endwin();
 }
 
-/**
- * active current window
- */
-static void ui_active_promote()
-{
-	touchwin(wins[2]);
-	wrefresh(wins[2]);
+int win_gets(char *buf, int len) {
+  wcursyncup(input);
+  wrefresh(input);
+  wmove(input, 0, 0);
+  wrefresh(input);
+  wgetnstr(input, buf, len);
+  wclear(input);
+  wrefresh(input);
+  return strlen(buf);
 }
 
-void ui_init()
-{
-	initscr();
-	cbreak();
-	nonl();
-	intrflush(stdscr,FALSE);
-	refresh();
-}
-
-void ui_end()
-{
-	endwin();
-}
-
-void ui_main()
-{
-	int i;
-
-	init_wins();
-
-	for (i = 0; i < 3; i++) {
-		keypad(wins[i], TRUE);
-		panels[i] = new_panel(wins[i]);
-	}
-
-	keypad(stdscr, TRUE);
-	scrollok(wins[1], TRUE);
-
-	set_panel_userptr(panels[0], panels[1]);
-	set_panel_userptr(panels[1], panels[2]);
-	set_panel_userptr(panels[2], panels[0]);
-
-	ui_update();
-}
-
-void ui_update()
-{
-	update_panels();
-	doupdate();
-}
-
-int ui_gets(char *buf)
-{
-	int n = 0;
-	ui_active_promote();
-
-	wgetnstr(wins[2], buf, BUFFER_SIZE);
-
-	while ( (n = strlen(buf)) <= 0) {
-		wgetnstr(wins[2], buf, BUFFER_SIZE);
-	}
-
-	return n;
-}
-
-void ui_promote(char *buf)
-{
-	ui_active_promote();
-
-	wclear(wins[2]);
-	mvwprintw(wins[2], 1, 2, "%s", buf);
-	wrefresh(wins[2]);
-}
-
-void ui_puts(char *buf)
-{
-	wprintw(wins[1], "\n%s\n", buf);
-	wrefresh(wins[1]);
+void win_puts(const char *buf) {
+  pthread_mutex_lock(&wlock);
+  wprintw(chat, "%s\n",buf);
+  wrefresh(chat);
+  pthread_mutex_unlock(&wlock);
+  //always focus at input
+  wcursyncup(input);
+  wrefresh(input);
 }

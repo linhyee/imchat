@@ -68,72 +68,72 @@
 
   $.extend($.fn, {
     emotion : function() {
-        return this.each(function() {
-          $(this).click(function(event) {
-            var s,
-              offset = $(this).offset(),
-              top = offset.top + this.offsetHeight + 2,
-              box = $('#faceDiv');
+      return this.each(function() {
+        $(this).click(function(event) {
+          var s,
+            offset = $(this).offset(),
+            top = offset.top + this.offsetHeight + 2,
+            box = $('#faceDiv');
 
-            s = '<div id="faceDiv"></div>';
+          s = '<div id="faceDiv"></div>';
 
-            if (box.size() == 0) {
-              box = $(s).appendTo($('body'));
-              $(document).bind('click', _close);
-            }
+          if (box.size() == 0) {
+            box = $(s).appendTo($('body'));
+            $(document).bind('click', _close);
+          }
 
-            if (box.find('img').size() <= 0) {
-              $.each(face, function(i, v){
-                box.append('<img title="'+v.faceName+'" src="./assets/images/face/'+v.facePath+'" />')
-              });
-
-              box.find('img').click(function(){
-                _insert_at_cursor($('#txt')[0], '['+$(this).attr('title')+']');
-                _close();
-              });
-            }
-
-            box.css({
-              left: offset.left + this.offsetWidth / 2 + 'px',
-              top: top + 'px'
-            }).click(function(event){
-              event.stopPropagation();
+          if (box.find('img').size() <= 0) {
+            $.each(face, function(i, v){
+              box.append('<img title="'+v.faceName+'" src="./assets/images/face/'+v.facePath+'" />')
             });
 
-            function _insert_at_cursor(myField, myValue) {
-                if (document.selection) {
-                  myField.focus();
-                  sel = document.selection.createRange();
-                  sel.text = myValue;
-                  sel.select();
-                } else if (myField.selectionStart || myField.selectionStart == '0') {
-                  var startPos = myField.selectionStart;
-                  var endPos = myField.selectionEnd;
-                  var restoreTop = myField.scrollTop;
+            box.find('img').click(function(){
+              _insert_at_cursor($('#txt')[0], '['+$(this).attr('title')+']');
+              _close();
+            });
+          }
 
-                  myField.value = myField.value.substring(0, startPos) +
-                    myValue + myField.value.substring(endPos, myField.value.length);
-                  if (restoreTop > 0) {
-                    myField.scrollTop = restoreTop;
-                  }
-
-                  myField.focus();
-                  myField.selectionStart = startPos + myValue.length;
-                  myField.selectionEnd = startPos + myValue.length;
-                } else {
-                  myField.value += myValue;
-                  myField.focus();
-                }
-            }
-
-            function _close() {
-                var box = $('#faceDiv')
-                box.remove();
-                $(document).unbind('click', _close);
-            }
+          box.css({
+            left: offset.left + this.offsetWidth / 2 + 'px',
+            top: top + 'px'
+          }).click(function(event){
             event.stopPropagation();
           });
+
+          function _insert_at_cursor(myField, myValue) {
+              if (document.selection) {
+                myField.focus();
+                sel = document.selection.createRange();
+                sel.text = myValue;
+                sel.select();
+              } else if (myField.selectionStart || myField.selectionStart == '0') {
+                var startPos = myField.selectionStart;
+                var endPos = myField.selectionEnd;
+                var restoreTop = myField.scrollTop;
+
+                myField.value = myField.value.substring(0, startPos) +
+                  myValue + myField.value.substring(endPos, myField.value.length);
+                if (restoreTop > 0) {
+                  myField.scrollTop = restoreTop;
+                }
+
+                myField.focus();
+                myField.selectionStart = startPos + myValue.length;
+                myField.selectionEnd = startPos + myValue.length;
+              } else {
+                myField.value += myValue;
+                myField.focus();
+              }
+          }
+
+          function _close() {
+              var box = $('#faceDiv')
+              box.remove();
+              $(document).unbind('click', _close);
+          }
+          event.stopPropagation();
         });
+      });
     }
   });
   $.extend({

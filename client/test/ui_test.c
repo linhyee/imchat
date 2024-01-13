@@ -1,30 +1,20 @@
 #include "im.h"
 
-typedef struct
-{
-	long int type;
-	char data[BUFFER_SIZE];
+typedef struct {
+  long int type;
+  char data[BUFFER_SIZE];
 } Msg_st;
 
 int main(void)
 {
-	ui_init();
-	ui_main();
+  wins_init();
+  Msg_st msg;
+  while (1) {
+    memset((void*) &msg, 0, sizeof(Msg));
+    win_gets(msg.data, BUFFER_SIZE);
+    win_puts(msg.data);
+  }
+  wins_destroy();
 
-	Msg_st msg;
-
-	while (1) {
-		ui_promote(">>");
-
-		memset((void*) &msg, 0, sizeof(Msg));
-
-		if (ui_gets(msg.data) > 0)
-			ui_puts(msg.data);
-
-		ui_update();
-	}
-
-	ui_end();
-
-	return 0;
+  return 0;
 }

@@ -12,9 +12,16 @@ class server {
   public $looper;
 
   function __construct($address = '127.0.0.1', $port = 9527) {
+    $this->check_environment();
     $this->address = $address;
     $this->port = $port;
     $this->looper = new looper();
+  }
+
+  private function check_environment() {
+    if (!extension_loaded('sockets')) {
+      trigger_error("the sockets extension is not loaded.");
+    }
   }
 
   function register(iprotocol $protocol) {
@@ -42,7 +49,7 @@ class server {
     $nsock = @socket_accept($this->sock);
     if ($nsock === false) {
       usleep(100);
-    } else if ($nsock > 0) {
+    } else if (is_object($nsock) or is_resource($nsock)) { // php8 nsock is a object
       socket_set_nonblock($nsock);
       $this->looper->add_event(new event($nsock, array($this->protocol, 'receiv'), event::READ));
 
@@ -50,7 +57,7 @@ class server {
         $this->protocol->connect($nsock, null);
       }
     } else {
-      trigger_error("error:".socket_strerror($nsock), 256);
+      trigger_error("error:".socket_strerror(socket_last_error($nsock)), 256);
     }
   }
 
@@ -77,7 +84,8 @@ function log_msg() {
 }
 
 function socketstr($socket) {
-  return str_replace(" ", "", strval($socket));
+  return str_replace(" ", "", is_object($socket) ? strval(spl_object_id($socket)): 
+    strval($socket)); //in php8 , socket is a final class
 }
 
 // read buf with \0
@@ -229,7 +237,7 @@ class select {
   }
 
   function exists($socket) {
-    return in_array($socket, $this->sockets);
+    return in_array($socket, $this->sockets, true); // in php8 socket are object, not resource, use strict cmp
   }
 
   function add($add_socket) {
@@ -240,7 +248,7 @@ class select {
     $sockets = array();
 
     foreach ($this->sockets as $socket) {
-      if($remove_socket != $socket)
+      if($remove_socket !== $socket) //php8, socket is a object type
         $sockets[] = $socket;
     }
 
@@ -249,13 +257,17 @@ class select {
 
   function can_read($timeout) {
     $read = $this->sockets;
-    @socket_select($read,$write = NULL,$except = NULL,$timeout);
+    $write = array();
+    $except = array();
+    @socket_select($read,$write,$except,$timeout);
     return $read;
   }
 
   function can_write($timeout) {
     $write = $this->sockets;
-    @socket_select($read = NULL,$write,$except = NULL,$timeout);
+    $read = array();
+    $except = array();
+    @socket_select($read, $write,$except,$timeout);
     return $write;
   }
 }
@@ -383,7 +395,8 @@ abstract class wsserver implements iprotocol {
         $this->split_packet(strlen($buf), $buf, $conn);
       }
     } catch (Exception $e) {
-      $this->close($sock);
+      log_msg("%s: handling receiv exception: %s", __METHOD__, $e->getMessage());
+      $this->close($conn);
     }
   }
 
@@ -399,9 +412,11 @@ abstract class wsserver implements iprotocol {
     $this->wrap_packet('', $conn, 'close', false);
     $conn->is_connected = false;
     unset($this->conns[socketstr($conn->sock)]);
+    $this->server->looper->remove_event(new event($conn->sock,null,event::READ));
+    $this->server->looper->remove_event(new event($conn->sock,null,event::WRITE));
     socket_close($conn->sock);
 
-    log_msg("client %s disconnected.\n", $conn->sock);
+    log_msg("client %s disconnected.\n", socketstr($conn->sock));
   }
 
   function get_active_conn($sock) {
@@ -446,7 +461,7 @@ abstract class wsserver implements iprotocol {
       write($conn->sock, $header);
       $conn->is_connected = true;
 
-      log_msg("client %s connected\n", $conn->sock);
+      log_msg("client %s connected\n", socketstr($conn->sock));
   }
 
   function split_packet($len, $packet, &$conn) {
@@ -463,6 +478,7 @@ abstract class wsserver implements iprotocol {
         if ($conn->has_sent_close) {
           $this->close($conn);
         } else {
+          log_msg("receive message:%s", $message);
           $this->message($conn->sock, $message); // Overide it !
         }
       }
@@ -622,9 +638,8 @@ abstract class wsserver implements iprotocol {
     if ($payload_length > 0) {
       // Get raw payload
       $data = self::read($packet, $offset, $payload_length);
-      $strlen = extension_loaded('mbstring') ? 'mb_strlen' : 'strlen';
 
-      if ($payload_length > $strlen($conn->huge_payload.$data)) {
+      if ($payload_length > strlen($conn->huge_payload.$data)) {
         $conn->handling_partial_packet = true;
         // Just the current frame size buf
         $conn->partial_buff = substr($packet, 0, $frame_size);
@@ -716,9 +731,33 @@ class chatroom extends wsserver {
   public $db = null;
 
   function init() {
-    require '../lib/db.php';
-    $db = new \lib\Db(array('db_type' => 'sqlite','sqlite_path' => dirname(getcwd()).'/data/ichat.db' ));
+    require __DIR__.'/../lib/db.php';
+    $db = new \lib\Db(array('db_type' => 'sqlite','sqlite_path' => __DIR__.'/../data/ichat.db' ));
     $this->db = $db;
+
+    $this->check_db();
+  }
+
+  function check_db() {
+    try {
+      $this->db->select('msg')->limit(1)->query();
+    } catch (\PDOException $e) {
+      $sql = <<<EOF
+create table msg (
+  `id` integer primary key autoincrement,
+  `from` varchar(255),
+  `to` varchar(255),
+  `msg` text,
+  `image` blob,
+  `create_time` int
+)
+EOF;
+      try {
+        $this->db->raw($sql)->exec();
+      } catch (\PDOException $e) {
+        trigger_error("fail to create msg table. error:".$e->getMessage(),256);
+      }
+    }
   }
 
   function connecting($sock) {}
@@ -756,7 +795,7 @@ class chatroom extends wsserver {
 
     foreach ($this->conns as &$client) {
       if ($client->islogin) {
-        if ($client->sock == $sock) {
+        if ($client->sock === $sock) {
           $client->username = null;
           $client->email = null;
           $client->islogin = false;
@@ -838,7 +877,7 @@ class chatroom extends wsserver {
     foreach ($this->conns as $client) {
       $data = $msg; // Storage a local var because every connection could change it
       if ($client->islogin) {
-        if ($client->sock != $conn->sock) {
+        if ($client->sock !== $conn->sock) { // php8,socket is a object, use !==
           if ($data['type'] == 'presence') {
             // Others no need its session
             if (isset($data['session'])) {
@@ -867,8 +906,11 @@ class chatroom extends wsserver {
   }
 
   function getmsg($limit = 20) {
-    $pdostmt = $this->db->select('msg')->orderBy('create_time', 'asc')->limit(20)->query();
-    $rs = $pdostmt->fetchAll(\PDO::FETCH_ASSOC);
+    try {
+      $rs = $this->db->select('msg')->orderBy('create_time', 'asc')->limit(20)->query();
+    } catch (\PDOException $e) {
+      return array();
+    }
     $msg = array();
     foreach ($rs as $val) {
       $msg[] = array(
@@ -881,6 +923,6 @@ class chatroom extends wsserver {
   }
 }
 
-$srv = new server();
+$srv = new server('0.0.0.0');
 $srv->register(new chatroom($srv, '\\server\\usrconn')); //wtf, namespace!!!
 $srv->start();

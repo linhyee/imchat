@@ -2,15 +2,23 @@
 
 int main(void)
 {
-	int cfd;
+  int fd = im_connect("127.0.0.1", 8000);	
 
-	cfd = im_connect("192.168.66.10", 8080);	
+  Msg msg = {
+    .type = 2,
+    .chat = 'u',
+    .to = "kitty",
+    .from = "jonh",
+    .data = "data pack test",
+  };
 
-	write(cfd, "hello, mmm", 20);
-	
-	im_main((void *) (unsigned long)cfd);
+  int sz;
+  char *buf =  pack_msg(&msg, &sz);
+  write(fd, buf, sz);
 
-	im_close(cfd);
+  Msg msg2;
+  unpack_msg(fd, &msg2);
 
-	return 0;	
+  im_close(fd);
+  return 0;	
 }

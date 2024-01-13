@@ -90,6 +90,11 @@ class Db
     protected $sql = "";
 
     /**
+     * @var bool
+     */
+    protected $raw = false;
+
+    /**
      *
      * name => value pairs
      *
@@ -507,6 +512,17 @@ class Db
         return $this->errors;
     }
 
+//--------------------------------------------------------------------------
+    /**
+     * @return $this
+     */
+    public function raw($sql)
+    {
+        $this->sql = $sql;
+        $this->raw = true;
+        return $this;
+    }
+
 // ------------------------------------------------------------------------
     /**
      *
@@ -516,15 +532,38 @@ class Db
      *
      * @param $table The table name
      *
-     * @return PDOStatement 
+     * @return array
      *
      */
     public function query()
     {
-        $this->sql = $this->buildSql();
-        $pdostatement = $this->db->query( $this->sql );
+        $this->sql = $this->raw ? $this->sql : $this->buildSql();
 
-        return $pdostatement;
+        $pdostatement = $this->db->query( $this->sql );
+        $rs = $pdostatement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($this->raw)
+        {
+            $this->raw = false;
+        }
+
+        return $rs;
+    }
+
+// ------------------------------------------------------------------------
+    /**
+     * execute sql
+     * 
+     * @return void
+     */
+    public function exec()
+    {
+        if ($this->raw)
+        {
+            $stmt = $this->db->prepare($this->sql);
+            $stmt->execute();
+            $this->raw = false;
+        }
     }
 
 // ------------------------------------------------------------------------
