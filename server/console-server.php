@@ -120,8 +120,9 @@ class Server {
     }
     $msg = array();
     $buf_sz = strlen($buf) ;
+    $unpack_sz = $buf_sz;
     $offset = 0;
-    while ($buf_sz >= 3) { // 封包格式: |1byte|2byte|------data-------|, 所以有至少3个字节长度buf
+    while ($unpack_sz >= 3) { // 封包格式: |1byte|2byte|------data-------|, 所以有至少3个字节长度buf
       $byte = substr($buf, $offset, 1);
       $offset += 1;
       $id = ord($byte);
@@ -131,17 +132,23 @@ class Server {
       // 载荷长度
       $sz = unpack('n',substr($buf, $offset, 2))[1];
       $offset += 2;
-      if ($sz > 0 && $buf_sz - $offset >= $sz) {
-        $payload = substr($buf, $offset, $sz -1); // tail with \0
-        array_push($msg, $payload);
-        $offset += $sz;
+      if ($sz > 0 ) {
+        if ($buf_sz - $offset >= $sz) {
+          $payload = substr($buf, $offset, $sz -1); // tail with \0
+          array_push($msg, $payload);
+          $offset += $sz;
+        } else {
+          // 没有收到足够的数据
+          $offset -= 3;
+          break;
+        }
+      } else { //非法数据
+        return false;
       }
-      $buf_sz -= $offset;
+      $unpack_sz -= $offset;
     }
-
-    if ($offset > 0) {
-      $conn->buf = substr($buf, $offset);
-    }
+    $conn->read_buf = substr($buf, $offset);
+    log_msg("partial buf : buf_sz=%d, offset=%d, read_buf=%s", $buf_sz, $offset, $conn->read_buf);
     return $msg;
   }
 
