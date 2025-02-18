@@ -20,6 +20,7 @@ char* pack_msg(Msg *msg, int *buf_size) {
   char *out = (char *)malloc(hsz + psz);
   if (out == NULL) {
     elog(0, "molloc packed msg buf error: %s", strerror(errno));
+    free(buf); // release buf
     return NULL;
   }
   char *s = out;
@@ -75,15 +76,17 @@ int unpack_msg(int fd, Msg *msg) {
     sz = recv(fd, (char *)xp.x_buf + ofs, psz, MSG_WAITALL);
     if (sz < 0) {
       elog(0, "unpack msg body error: %s", strerror(errno));
+      free(xp.x_buf);
       return -1;
     } else if (sz == 0) {
+      free(xp.x_buf);
       return 1;
     }
     psz -= sz;
     ofs += sz;
   }
 
-  elog(0, "unpack msg ok: id=%x, len=%d, buf=%s",
+  elog(0, "unpack msg ok: id=%x, len=%d, buf=%.*s",
     xp.x_id, xp.x_len, xp.x_buf);
 
   int n = decode_msg(msg, (char *)xp.x_buf) ;
