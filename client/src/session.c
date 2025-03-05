@@ -37,8 +37,4 @@ void* im_main(void *arg) {
   pthread_exit(NULL);
 }
 
-void im_close(int fd) {
-  if (fd) {
-    close(fd);
-  }
-}
+void im_close(int fd) { close(fd); }
